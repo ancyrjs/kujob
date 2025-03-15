@@ -1,7 +1,8 @@
-import { Pool } from './pool.js';
 import { randomUUID } from 'node:crypto';
-
+import { Pool } from './pool.js';
 import { JobData, WorkingJob } from './job.js';
+import { ILogger } from './logger.js';
+import { ConsoleLogger } from './loggers/console-logger.js';
 
 export class Queue {
   private pool: Pool;
@@ -9,12 +10,14 @@ export class Queue {
   private workerId: string;
   private queueId: number;
   private handlers: Map<string, (job: WorkingJob) => Promise<any>> = new Map();
+  private logger: ILogger;
 
-  constructor(config: { pool: Pool; queueName: string }) {
+  constructor(config: { pool: Pool; queueName: string; logger?: ILogger }) {
     this.pool = config.pool;
     this.queueName = config.queueName;
     this.workerId = `worker-${randomUUID()}`;
     this.queueId = 0;
+    this.logger = config.logger ?? new ConsoleLogger();
   }
 
   async initialize() {
@@ -32,6 +35,10 @@ export class Queue {
     type: string;
     payload: Record<string, any>;
   }): Promise<string> {
+    if (!this.handlers.has(config.type)) {
+      this.logger.warn(`No handler registered for job type: ${config.type}`);
+    }
+
     const jobId = randomUUID();
 
     await this.pool.runInTransaction(async (client) => {
@@ -128,7 +135,7 @@ export class Queue {
     const handler = this.handlers.get(workingJob.getType());
 
     if (!handler) {
-      await workingJob.requeue();
+      await workingJob.kill();
       return;
     }
 

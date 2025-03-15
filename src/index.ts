@@ -1,6 +1,8 @@
 import pg from 'pg';
 import { Pool } from './pool.js';
 import { Queue } from './queue.js';
+import { ILogger } from './logger.js';
+import { ConsoleLogger } from './loggers/console-logger.js';
 
 type ConnectionSettings = {
   user: string;
@@ -13,10 +15,12 @@ type ConnectionSettings = {
 export class Kujob {
   private connection: ConnectionSettings;
   private pool: pg.Pool;
+  private logger: ILogger;
 
-  constructor(props: { connection: ConnectionSettings }) {
+  constructor(props: { connection: ConnectionSettings; logger?: ILogger }) {
     this.connection = props.connection;
     this.pool = new pg.Pool(this.connection);
+    this.logger = props.logger ?? new ConsoleLogger();
   }
 
   async start() {
@@ -41,7 +45,7 @@ export class Kujob {
         completed_at TIMESTAMP WITH TIME ZONE,
         worker_id VARCHAR(100),
         
-        CONSTRAINT valid_status CHECK (status IN ('pending', 'processing', 'completed', 'failed'))
+        CONSTRAINT valid_status CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'dead'))
       );
     `);
 
@@ -67,9 +71,14 @@ export class Kujob {
     const queue = new Queue({
       pool: new Pool({ pool: this.pool }),
       queueName,
+      logger: this.logger,
     });
 
     await queue.initialize();
     return queue;
+  }
+
+  setLogger(logger: ILogger) {
+    this.logger = logger;
   }
 }

@@ -12,12 +12,15 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@swc/cli": "^0.6.0",
+    "@swc/core": "^1.11.9",
     "@testcontainers/postgresql": "^10.18.0",
     "@types/node": "^22.13.1",
     "@types/pg": "^8.11.11",
     "prettier": "^3.5.3",
     "testcontainers": "^10.18.0",
     "typescript": "^5.8.2",
+    "unplugin-swc": "^1.5.1",
     "vitest": "^3.0.8",
     "vitest-mock-extended": "^3.0.1"
   },
