@@ -6,6 +6,14 @@ import { ConsoleLogger } from './loggers/console-logger.js';
 import { Worker } from './worker.js';
 import { Poller } from './poller/poller.js';
 
+type JobConfig = {
+  type: string;
+  id?: string;
+  payload?: Record<string, any>;
+  priority?: number;
+  attempts?: number;
+};
+
 export class Queue {
   private pool: Pool;
   private queueName: string;
@@ -43,38 +51,72 @@ export class Queue {
   /**
    * Add a job to the queue
    * @param config
+   * @returns Job ID
    */
-  async addJob(config: {
-    type: string;
-    id?: string;
-    payload?: Record<string, any>;
-    priority?: number;
-    attempts?: number;
-  }): Promise<string> {
-    if (!this.handlers.has(config.type)) {
-      this.logger.warn(`No handler registered for job type: ${config.type}`);
+  async addJob(config: JobConfig): Promise<string> {
+    const result = await this.addJobs([config]);
+    return result[0];
+  }
+
+  /**
+   * Add multiple jobs to the queue
+   * @param configs
+   * @returns List of job IDs
+   */
+  async addJobs(configs: JobConfig[]): Promise<string[]> {
+    if (configs.length === 0) {
+      return [];
     }
 
-    const jobId = config.id ?? randomUUID();
-    const payload = config.payload ?? {};
-    const priority = config.priority ?? 0;
-    const attempts = config.attempts ?? 1;
+    // Pre-process all configs and validate handlers
+    const jobEntries = configs.map((config) => {
+      if (!this.handlers.has(config.type)) {
+        this.logger.warn(`No handler registered for job type: ${config.type}`);
+      }
 
-    await this.pool.runInTransaction(async (client) => {
-      await client.query(
-        'INSERT INTO jobs (id, queue_id, type, payload, priority, attempts) VALUES ($1, $2, $3, $4, $5, $6)',
-        [
-          jobId,
-          this.queueId,
-          config.type,
-          JSON.stringify(payload),
-          priority,
-          attempts,
-        ],
-      );
+      return {
+        id: config.id ?? randomUUID(),
+        queueId: this.queueId,
+        type: config.type,
+        payload: config.payload ?? {},
+        priority: config.priority ?? 0,
+        attempts: config.attempts ?? 1,
+      };
     });
 
-    return jobId;
+    // Build a single parameterized query for all jobs
+    const valueStrings = [];
+    const queryParams: any[] = [];
+    let paramIndex = 1;
+
+    for (const job of jobEntries) {
+      valueStrings.push(
+        `($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5})`,
+      );
+
+      queryParams.push(
+        job.id,
+        job.queueId,
+        job.type,
+        JSON.stringify(job.payload),
+        job.priority,
+        job.attempts,
+      );
+      paramIndex += 6;
+    }
+
+    const queryText = `
+    INSERT INTO jobs (id, queue_id, type, payload, priority, attempts) 
+    VALUES ${valueStrings.join(', ')}
+  `;
+
+    // Execute the bulk insert in a single transaction
+    await this.pool.runInTransaction(async (client) => {
+      await client.query(queryText, queryParams);
+    });
+
+    // Return all generated job IDs
+    return jobEntries.map((job) => job.id);
   }
 
   /**

@@ -4,6 +4,16 @@ import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { DefaultPoolFactory } from '../../../src/pool-factory/pool-factory.js';
 import { DummyWorker } from '../../adapters/dummy-worker.js';
 
+class Timer {
+  static wrap<T>(fn: () => Promise<T>): Promise<{ result: T; time: number }> {
+    let start = Date.now();
+    return fn().then((result) => {
+      let end = Date.now();
+      return { result, time: end - start };
+    });
+  }
+}
+
 const container = await new PostgreSqlContainer().start();
 const kujob = new Kujob({
   poolFactory: new DefaultPoolFactory({
@@ -23,23 +33,22 @@ const jobIds = Array.from({ length: jobsToCreate }, () => randomUUID());
 const queue = await kujob.createQueue('queue');
 queue.register('job', new DummyWorker());
 
-for (const id of jobIds) {
-  // TODO create a addJobs method to add many jobs at once
-  await queue.addJob({ type: 'job', id });
-}
+let result = await Timer.wrap<any>(() =>
+  queue.addJobs(jobIds.map((jobId) => ({ type: 'job', id: jobId }))),
+);
+
+console.log(`Created ${jobsToCreate} jobs in ${result.time}ms`);
 
 let completedJobsCount = 0;
-let start = Date.now();
 
-do {
-  await queue.startPolling();
-  completedJobsCount = await queue.fetchCompletedJobsCount();
-} while (completedJobsCount !== jobIds.length);
+result = await Timer.wrap<any>(async () => {
+  do {
+    await queue.startPolling();
+    completedJobsCount = await queue.fetchCompletedJobsCount();
+  } while (completedJobsCount !== jobIds.length);
+});
 
-let end = Date.now();
+console.log(`Completed ${completedJobsCount} jobs in ${result.time}ms`);
 
 await queue.stopPolling();
-
-console.log(`Completed ${completedJobsCount} jobs in ${end - start}ms`);
-
 await kujob.end();
