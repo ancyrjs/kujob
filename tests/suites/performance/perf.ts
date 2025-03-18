@@ -1,5 +1,5 @@
-import { Kujob } from '../../../src/index.js';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
+import { Kujob } from '../../../src/index.js';
 import { DefaultPoolFactory } from '../../../src/pool-factory/pool-factory.js';
 import { DummyWorker } from '../../adapters/dummy-worker.js';
 import { generateUuid } from '../../../src/generate-uuid.js';
