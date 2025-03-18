@@ -3,6 +3,7 @@ import { StackLogger } from '../../adapters/stack-logger.js';
 import { Worker } from '../../../src/worker.js';
 import { DummyWorker } from '../../adapters/dummy-worker.js';
 import { Tester } from '../../config/tester.js';
+import { generateUuid } from '../../../src/generate-uuid.js';
 
 let tester = new Tester();
 
@@ -90,6 +91,28 @@ describe('a job without handler followed by a job with handler', () => {
     const job = (await queue.readJob(jobId))!;
     expect(job.status).toBe('completed');
   });
+});
+
+test('adding many jobs to the queue', async () => {
+  const kujob = tester.getKujob();
+
+  const queue = await kujob.createQueue('my-queue');
+  queue.register('queue', new DummyWorker());
+
+  const jobIds = [generateUuid(), generateUuid(), generateUuid()];
+
+  await queue.addJobs(jobIds.map((id) => ({ type: 'queue', id })));
+
+  let addedJobsCount = 0;
+
+  for (const jobId of jobIds) {
+    const job = await queue.readJob(jobId);
+    if (job) {
+      addedJobsCount++;
+    }
+  }
+
+  expect(addedJobsCount).toBe(jobIds.length);
 });
 
 const createQueueWithJob = async (config?: { logger?: StackLogger }) => {

@@ -1,6 +1,6 @@
-import { randomUUID } from 'node:crypto';
 import { DummyWorker } from '../../adapters/dummy-worker.js';
 import { Tester } from '../../config/tester.js';
+import { generateUuid } from '../../../src/generate-uuid.js';
 
 let tester = new Tester();
 
@@ -9,7 +9,7 @@ beforeEach(() => tester.beforeEach());
 afterAll(() => tester.afterAll());
 
 test('pass a custom id to the job', async () => {
-  const ID = randomUUID();
+  const ID = generateUuid();
 
   const queue = await tester.getKujob().createQueue('my-queue');
   queue.register('job', new DummyWorker());

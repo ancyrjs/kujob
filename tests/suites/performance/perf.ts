@@ -1,8 +1,8 @@
-import { randomUUID } from 'node:crypto';
 import { Kujob } from '../../../src/index.js';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { DefaultPoolFactory } from '../../../src/pool-factory/pool-factory.js';
 import { DummyWorker } from '../../adapters/dummy-worker.js';
+import { generateUuid } from '../../../src/generate-uuid.js';
 
 class Timer {
   static wrap<T>(fn: () => Promise<T>): Promise<{ result: T; time: number }> {
@@ -28,7 +28,7 @@ const kujob = new Kujob({
 await kujob.start();
 
 const jobsToCreate = 10_000;
-const jobIds = Array.from({ length: jobsToCreate }, () => randomUUID());
+const jobIds = Array.from({ length: jobsToCreate }, () => generateUuid());
 
 const queue = await kujob.createQueue('queue');
 queue.register('job', new DummyWorker());

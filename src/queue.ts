@@ -5,6 +5,7 @@ import { Logger } from './loggers/logger.js';
 import { ConsoleLogger } from './loggers/console-logger.js';
 import { Worker } from './worker.js';
 import { Poller } from './poller/poller.js';
+import { generateUuid } from './generate-uuid.js';
 
 type JobConfig = {
   type: string;
@@ -75,7 +76,7 @@ export class Queue {
       }
 
       return {
-        id: config.id ?? randomUUID(),
+        id: config.id ?? generateUuid(),
         queueId: this.queueId,
         type: config.type,
         payload: config.payload ?? {},

@@ -1,6 +1,6 @@
 import { DummyWorker } from '../../adapters/dummy-worker.js';
 import { Tester } from '../../config/tester.js';
-import { randomUUID } from 'node:crypto';
+import { generateUuid } from '../../../src/generate-uuid.js';
 
 let tester = new Tester();
 
@@ -14,10 +14,8 @@ test('run to completion', async () => {
   const queue = await kujob.createQueue('my-queue');
   queue.register('job', new DummyWorker());
 
-  const jobIds = [randomUUID(), randomUUID(), randomUUID()];
-  for (const id of jobIds) {
-    await queue.addJob({ type: 'job', id });
-  }
+  const jobIds = [generateUuid(), generateUuid(), generateUuid()];
+  await queue.addJobs(jobIds.map((id) => ({ type: 'job', id })));
 
   queue.startPolling();
 
