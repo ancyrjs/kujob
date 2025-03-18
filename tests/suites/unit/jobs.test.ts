@@ -101,9 +101,6 @@ const createQueueWithJob = async (config?: { logger?: StackLogger }) => {
   const queue = await kujob.createQueue('my-queue');
   const jobId = await queue.addJob({
     type: 'my-job',
-    payload: {
-      foo: 'bar',
-    },
   });
 
   return {
