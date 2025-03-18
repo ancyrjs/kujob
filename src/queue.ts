@@ -38,6 +38,7 @@ export class Queue {
    */
   async addJob(config: {
     type: string;
+    id?: string;
     payload?: Record<string, any>;
     priority?: number;
     attempts?: number;
@@ -46,7 +47,7 @@ export class Queue {
       this.logger.warn(`No handler registered for job type: ${config.type}`);
     }
 
-    const jobId = randomUUID();
+    const jobId = config.id ?? randomUUID();
     const payload = config.payload ?? {};
     const priority = config.priority ?? 0;
     const attempts = config.attempts ?? 1;
