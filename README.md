@@ -12,7 +12,7 @@ I wrote this package for two reasons :
 
 - Schedule & Run jobs
 - Group jobs into queues
-- Prioritize jobs within a queue (TODO)
+- Prioritize jobs within a queue
 - Run jobs only after a certain delay (TODO)
 - Retry failed jobs a fixed number of times (TODO)
 - Configure either a linear or exponential backoff for failed jobs (TODO)

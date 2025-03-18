@@ -17,7 +17,7 @@ describe('the handler completes', () => {
     queue.register('my-job', new DummyWorker());
     await queue.processNextJob();
 
-    const job = (await queue.getJob(jobId))!;
+    const job = (await queue.readJob(jobId))!;
     expect(job.status).toBe('completed');
   });
 
@@ -42,7 +42,7 @@ describe('the handler fails', () => {
     queue.register('my-job', worker);
     await queue.processNextJob();
 
-    const job = (await queue.getJob(jobId))!;
+    const job = (await queue.readJob(jobId))!;
     expect(job.status).toBe('failed');
   });
 });
@@ -53,7 +53,7 @@ describe('no handler registered', () => {
 
     await queue.processNextJob();
 
-    const job = (await queue.getJob(jobId))!;
+    const job = (await queue.readJob(jobId))!;
     expect(job.status).toBe('dead');
     expect(job.workerId).toBe(null);
   });
@@ -84,10 +84,10 @@ describe('a job without handler followed by a job with handler', () => {
     await queue.processNextJob();
     await queue.processNextJob();
 
-    const noHandlerJob = (await queue.getJob(noHandlerJobId))!;
+    const noHandlerJob = (await queue.readJob(noHandlerJobId))!;
     expect(noHandlerJob.status).toBe('dead');
 
-    const job = (await queue.getJob(jobId))!;
+    const job = (await queue.readJob(jobId))!;
     expect(job.status).toBe('completed');
   });
 });

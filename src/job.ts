@@ -5,8 +5,11 @@ export interface JobData<T extends Record<string, any> = Record<string, any>> {
   type: string;
   payload: T;
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'dead';
+  priority: number;
+  attempts: number;
   createdAt: Date;
   updatedAt: Date;
+  enqueuedAt: Date;
   startedAt: Date | null;
   completedAt: Date | null;
   workerId: string | null;
@@ -15,6 +18,7 @@ export interface JobData<T extends Record<string, any> = Record<string, any>> {
 export interface ReadOnlyJob<
   T extends Record<string, any> = Record<string, any>,
 > {
+  getId(): string;
   getType(): string;
   getPayload(): T;
 }
@@ -29,14 +33,18 @@ export interface ControllableJob {
 export class WorkingJob<T extends Record<string, any> = Record<string, any>>
   implements ReadOnlyJob<T>, ControllableJob
 {
-  private pool: Pool;
-  private workerId: string;
-  private data: JobData<T>;
+  private readonly pool: Pool;
+  private readonly workerId: string;
+  private readonly data: JobData<T>;
 
   constructor(config: { pool: Pool; workerId: string; data: JobData<T> }) {
     this.pool = config.pool;
     this.workerId = config.workerId;
     this.data = config.data;
+  }
+
+  getId() {
+    return this.data.id;
   }
 
   getType() {
@@ -45,6 +53,14 @@ export class WorkingJob<T extends Record<string, any> = Record<string, any>>
 
   getPayload() {
     return this.data.payload;
+  }
+
+  async failed() {
+    if (this.data.attempts === 1) {
+      await this.fail();
+    } else {
+      await this.requeue();
+    }
   }
 
   async complete(): Promise<void> {
@@ -58,10 +74,6 @@ export class WorkingJob<T extends Record<string, any> = Record<string, any>>
         [this.data.id, this.workerId],
       );
     });
-
-    this.data.updatedAt = new Date();
-    this.data.completedAt = new Date();
-    this.data.status = 'completed';
   }
 
   async fail(): Promise<void> {
@@ -74,9 +86,6 @@ export class WorkingJob<T extends Record<string, any> = Record<string, any>>
         [this.data.id, this.workerId],
       );
     });
-
-    this.data.updatedAt = new Date();
-    this.data.status = 'failed';
   }
 
   async requeue(): Promise<void> {
@@ -84,6 +93,8 @@ export class WorkingJob<T extends Record<string, any> = Record<string, any>>
       return client.query(
         `UPDATE jobs
          SET status = 'pending',
+             attempts = attempts - 1,
+             enqueued_at = NOW(),
              updated_at = NOW(),
              started_at = NULL,
              worker_id = NULL
@@ -91,9 +102,6 @@ export class WorkingJob<T extends Record<string, any> = Record<string, any>>
         [this.data.id, this.workerId],
       );
     });
-
-    this.data.updatedAt = new Date();
-    this.data.status = 'processing';
   }
 
   async kill(): Promise<void> {
@@ -108,8 +116,5 @@ export class WorkingJob<T extends Record<string, any> = Record<string, any>>
         [this.data.id, this.workerId],
       );
     });
-
-    this.data.updatedAt = new Date();
-    this.data.status = 'dead';
   }
 }

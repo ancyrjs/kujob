@@ -32,10 +32,15 @@ export class Queue {
     });
   }
 
+  /**
+   * Add a job to the queue
+   * @param config
+   */
   async addJob(config: {
     type: string;
     payload?: Record<string, any>;
     priority?: number;
+    attempts?: number;
   }): Promise<string> {
     if (!this.handlers.has(config.type)) {
       this.logger.warn(`No handler registered for job type: ${config.type}`);
@@ -44,11 +49,19 @@ export class Queue {
     const jobId = randomUUID();
     const payload = config.payload ?? {};
     const priority = config.priority ?? 0;
+    const attempts = config.attempts ?? 1;
 
     await this.pool.runInTransaction(async (client) => {
       await client.query(
-        'INSERT INTO jobs (id, queue_id, type, payload, priority) VALUES ($1, $2, $3, $4, $5)',
-        [jobId, this.queueId, config.type, JSON.stringify(payload), priority],
+        'INSERT INTO jobs (id, queue_id, type, payload, priority, attempts) VALUES ($1, $2, $3, $4, $5, $6)',
+        [
+          jobId,
+          this.queueId,
+          config.type,
+          JSON.stringify(payload),
+          priority,
+          attempts,
+        ],
       );
     });
 
@@ -69,7 +82,7 @@ export class Queue {
          WHERE id = (
            SELECT id FROM jobs 
            WHERE queue_id = $2 AND status = 'pending'
-           ORDER BY priority DESC, created_at ASC
+           ORDER BY priority DESC, enqueued_at ASC
            FOR UPDATE SKIP LOCKED
            LIMIT 1
          )
@@ -82,25 +95,35 @@ export class Queue {
       return null;
     }
 
-    const data = result.rows[0];
     return new WorkingJob({
       pool: this.pool,
       workerId: this.workerId,
-      data: {
-        id: data.id,
-        type: data.type,
-        payload: data.payload,
-        status: data.status,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at,
-        startedAt: data.started_at ?? null,
-        completedAt: data.completed_at ?? null,
-        workerId: data.worker_id ?? null,
-      },
+      data: this.sqlToJobData(result.rows[0]),
     });
   }
 
-  async getJob(id: string): Promise<JobData | null> {
+  private sqlToJobData(data: any): JobData {
+    return {
+      id: data.id,
+      type: data.type,
+      payload: data.payload,
+      status: data.status,
+      priority: data.priority,
+      attempts: data.attempts,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      enqueuedAt: data.enqueuedAt,
+      startedAt: data.started_at ?? null,
+      completedAt: data.completed_at ?? null,
+      workerId: data.worker_id ?? null,
+    };
+  }
+
+  /**
+   * Read job's data
+   * @param id
+   */
+  async readJob(id: string): Promise<JobData | null> {
     const result = await this.pool.runInTransaction(async (client) =>
       client.query(
         `
@@ -115,24 +138,22 @@ export class Queue {
       return null;
     }
 
-    const job = result.rows[0];
-    return {
-      id: job.id,
-      type: job.type,
-      payload: job.payload,
-      status: job.status,
-      createdAt: job.created_at,
-      updatedAt: job.updated_at,
-      startedAt: job.started_at ?? null,
-      completedAt: job.completed_at ?? null,
-      workerId: job.worker_id ?? null,
-    };
+    return this.sqlToJobData(result.rows[0]);
   }
 
+  /**
+   * Register the worker as the processor for the given job type
+   * @param type
+   * @param worker
+   */
   register(type: string, worker: Worker) {
     this.handlers.set(type, worker);
   }
 
+  /**
+   * Acquire the next job and process it.
+   * If no worker can process the job, the job is killed
+   */
   async processNextJob() {
     const workingJob = await this.acquireNextJob();
     if (!workingJob) {
@@ -150,7 +171,7 @@ export class Queue {
       await worker.process(workingJob);
       await workingJob.complete();
     } catch (error) {
-      await workingJob.fail();
+      await workingJob.failed();
     }
   }
 }
