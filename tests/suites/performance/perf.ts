@@ -17,13 +17,14 @@ const kujob = new Kujob({
 
 await kujob.start();
 
-const jobsToCreate = 1000;
+const jobsToCreate = 10_000;
 const jobIds = Array.from({ length: jobsToCreate }, () => randomUUID());
 
 const queue = await kujob.createQueue('queue');
 queue.register('job', new DummyWorker());
 
 for (const id of jobIds) {
+  // TODO create a addJobs method to add many jobs at once
   await queue.addJob({ type: 'job', id });
 }
 
@@ -31,7 +32,7 @@ let completedJobsCount = 0;
 let start = Date.now();
 
 do {
-  await queue.poll();
+  await queue.startPolling();
   completedJobsCount = await queue.fetchCompletedJobsCount();
 } while (completedJobsCount !== jobIds.length);
 

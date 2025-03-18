@@ -11,6 +11,10 @@ export class Pool {
     return this.pool.connect();
   }
 
+  end() {
+    return this.pool.end();
+  }
+
   raw() {
     return this.pool;
   }

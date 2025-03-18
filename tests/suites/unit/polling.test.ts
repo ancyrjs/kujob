@@ -19,7 +19,7 @@ test('run to completion', async () => {
     await queue.addJob({ type: 'job', id });
   }
 
-  queue.poll();
+  queue.startPolling();
 
   const waitFor = (delay: number) =>
     new Promise((resolve) => setTimeout(resolve, delay));

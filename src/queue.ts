@@ -4,6 +4,7 @@ import { JobData, WorkingJob } from './job.js';
 import { Logger } from './loggers/logger.js';
 import { ConsoleLogger } from './loggers/console-logger.js';
 import { Worker } from './worker.js';
+import { Poller } from './poller/poller.js';
 
 export class Queue {
   private pool: Pool;
@@ -12,14 +13,20 @@ export class Queue {
   private queueId: number;
   private handlers: Map<string, Worker> = new Map();
   private logger: Logger;
-  private pollId: NodeJS.Timeout | null = null;
+  private poller: Poller;
 
-  constructor(config: { pool: Pool; queueName: string; logger?: Logger }) {
+  constructor(config: {
+    pool: Pool;
+    queueName: string;
+    logger?: Logger;
+    poller: Poller;
+  }) {
     this.pool = config.pool;
     this.queueName = config.queueName;
     this.workerId = `worker-${randomUUID()}`;
     this.queueId = 0;
     this.logger = config.logger ?? new ConsoleLogger();
+    this.poller = config.poller;
   }
 
   async initialize() {
@@ -73,7 +80,7 @@ export class Queue {
   /**
    * Fetch the next job from the queue and lock it
    */
-  async acquireNextJob(): Promise<WorkingJob | null> {
+  async acquireNextJobs({ count }: { count: number }): Promise<WorkingJob[]> {
     const result = await this.pool.runInTransaction(async (client) =>
       client.query(
         `UPDATE jobs 
@@ -81,27 +88,26 @@ export class Queue {
              updated_at = NOW(), 
              started_at = NOW(), 
              worker_id = $1
-         WHERE id = (
+         WHERE id IN (
            SELECT id FROM jobs 
            WHERE queue_id = $2 AND status = 'pending'
            ORDER BY priority DESC, enqueued_at ASC
            FOR UPDATE SKIP LOCKED
-           LIMIT 1
+           LIMIT $3
          )
          RETURNING *`,
-        [this.workerId, this.queueId],
+        [this.workerId, this.queueId, count],
       ),
     );
 
-    if (result.rows.length === 0) {
-      return null;
-    }
-
-    return new WorkingJob({
-      pool: this.pool,
-      workerId: this.workerId,
-      data: this.sqlToJobData(result.rows[0]),
-    });
+    return result.rows.map(
+      (row) =>
+        new WorkingJob({
+          pool: this.pool,
+          workerId: this.workerId,
+          data: this.sqlToJobData(row),
+        }),
+    );
   }
 
   private sqlToJobData(data: any): JobData {
@@ -157,12 +163,12 @@ export class Queue {
    * If no worker can process the job, the job is killed
    */
   async processNextJob() {
-    const workingJob = await this.acquireNextJob();
-    if (!workingJob) {
+    const workingJobs = await this.acquireNextJobs({ count: 1 });
+    if (workingJobs.length === 0) {
       return;
     }
 
-    return this.processJob(workingJob);
+    return this.processJob(workingJobs[0]);
   }
 
   async processJob(job: WorkingJob) {
@@ -181,28 +187,12 @@ export class Queue {
     }
   }
 
-  async poll() {
-    let job = null;
-    do {
-      job = await this.acquireNextJob();
-      if (job) {
-        const jobToProcess = job;
-        setImmediate(() => {
-          this.processJob(jobToProcess);
-        });
-      }
-    } while (job !== null);
-
-    this.pollId = setTimeout(() => {
-      this.poll();
-    }, 50);
+  async startPolling() {
+    return this.poller.start(this);
   }
 
   stopPolling() {
-    if (this.pollId) {
-      clearTimeout(this.pollId);
-      this.pollId = null;
-    }
+    return this.poller.stop();
   }
 
   fetchCompletedJobsCount(): Promise<number> {
