@@ -17,6 +17,7 @@
     "@testcontainers/postgresql": "^10.18.0",
     "@types/node": "^22.13.1",
     "@types/pg": "^8.11.11",
+    "pg": "^8.13.3",
     "prettier": "^3.5.3",
     "testcontainers": "^10.18.0",
     "typescript": "^5.8.2",
@@ -25,7 +26,7 @@
     "vitest-mock-extended": "^3.0.1"
   },
   "packageManager": "pnpm@10.6.1",
-  "dependencies": {
-    "pg": "^8.13.3"
+  "peerDependencies": {
+    "pg": "^8.0.0"
   }
 }

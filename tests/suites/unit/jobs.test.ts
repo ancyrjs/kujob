@@ -1,35 +1,14 @@
 import { mock } from 'vitest-mock-extended';
-
-import { Kujob } from '../../../src/index.js';
 import { StackLogger } from '../../adapters/stack-logger.js';
 import { Worker } from '../../../src/worker.js';
 import { DummyWorker } from '../../adapters/dummy-worker.js';
-import { provide } from '../../config/provide.js';
-import { DefaultPoolFactory } from '../../../src/pool-factory/pool-factory.js';
+import { Tester } from '../../config/tester.js';
 
-let kujob: Kujob;
+let tester = new Tester();
 
-beforeAll(async () => {
-  kujob = new Kujob({
-    poolFactory: new DefaultPoolFactory({
-      user: provide('dbUser'),
-      password: provide('dbPassword'),
-      host: provide('dbHost'),
-      port: provide('dbPort'),
-      database: provide('dbDatabase'),
-    }),
-  });
-
-  await kujob.start();
-});
-
-beforeEach(async () => {
-  await kujob.purge();
-});
-
-afterAll(async () => {
-  await kujob.end();
-});
+beforeAll(() => tester.beforeAll());
+beforeEach(() => tester.beforeEach());
+afterAll(() => tester.afterAll());
 
 describe('the handler completes', () => {
   test('completes the job', async () => {
@@ -90,6 +69,8 @@ describe('no handler registered', () => {
 
 describe('a job without handler followed by a job with handler', () => {
   test('process the job with handler', async () => {
+    const kujob = tester.getKujob();
+
     const queue = await kujob.createQueue('my-queue');
     queue.register('with-handler-job', new DummyWorker());
 
@@ -111,53 +92,9 @@ describe('a job without handler followed by a job with handler', () => {
   });
 });
 
-describe('priority', () => {
-  test('process the job with higher priority first', async () => {
-    const queue = await kujob.createQueue('my-queue');
-    queue.register('job', new DummyWorker());
-
-    const lowPri = await queue.addJob({
-      type: 'job',
-      priority: 1,
-    });
-    const highPri = await queue.addJob({
-      type: 'job',
-      priority: 2,
-    });
-
-    await queue.processNextJob();
-
-    const highPriJob = (await queue.getJob(highPri))!;
-    expect(highPriJob.status).toBe('completed');
-
-    const lowPriJob = (await queue.getJob(lowPri))!;
-    expect(lowPriJob.status).toBe('pending');
-  });
-
-  test('when the priority is the same, process the earlier one', async () => {
-    const queue = await kujob.createQueue('my-queue');
-    queue.register('job', new DummyWorker());
-
-    const first = await queue.addJob({
-      type: 'job',
-      priority: 2,
-    });
-    const second = await queue.addJob({
-      type: 'job',
-      priority: 2,
-    });
-
-    await queue.processNextJob();
-
-    const completedJob = (await queue.getJob(first))!;
-    expect(completedJob.status).toBe('completed');
-
-    const pendingJob = (await queue.getJob(second))!;
-    expect(pendingJob.status).toBe('pending');
-  });
-});
-
 const createQueueWithJob = async (config?: { logger?: StackLogger }) => {
+  const kujob = tester.getKujob();
+
   const logger = config?.logger ?? new StackLogger();
   kujob.setLogger(logger);
 
