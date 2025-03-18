@@ -1,18 +1,19 @@
 import { randomUUID } from 'node:crypto';
 import { Pool } from './pool.js';
 import { JobData, WorkingJob } from './job.js';
-import { ILogger } from './logger.js';
+import { Logger } from './loggers/logger.js';
 import { ConsoleLogger } from './loggers/console-logger.js';
+import { Worker } from './worker.js';
 
 export class Queue {
   private pool: Pool;
   private queueName: string;
   private workerId: string;
   private queueId: number;
-  private handlers: Map<string, (job: WorkingJob) => Promise<any>> = new Map();
-  private logger: ILogger;
+  private handlers: Map<string, Worker> = new Map();
+  private logger: Logger;
 
-  constructor(config: { pool: Pool; queueName: string; logger?: ILogger }) {
+  constructor(config: { pool: Pool; queueName: string; logger?: Logger }) {
     this.pool = config.pool;
     this.queueName = config.queueName;
     this.workerId = `worker-${randomUUID()}`;
@@ -51,7 +52,10 @@ export class Queue {
     return jobId;
   }
 
-  async getNextJob(): Promise<WorkingJob | null> {
+  /**
+   * Fetch the next job from the queue and lock it
+   */
+  async acquireNextJob(): Promise<WorkingJob | null> {
     const result = await this.pool.runInTransaction(async (client) =>
       client.query(
         `UPDATE jobs 
@@ -75,20 +79,20 @@ export class Queue {
       return null;
     }
 
-    const job = result.rows[0];
+    const data = result.rows[0];
     return new WorkingJob({
       pool: this.pool,
       workerId: this.workerId,
       data: {
-        id: job.id,
-        type: job.type,
-        payload: job.payload,
-        status: job.status,
-        createdAt: job.created_at,
-        updatedAt: job.updated_at,
-        startedAt: job.started_at ?? null,
-        completedAt: job.completed_at ?? null,
-        workerId: job.worker_id ?? null,
+        id: data.id,
+        type: data.type,
+        payload: data.payload,
+        status: data.status,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        startedAt: data.started_at ?? null,
+        completedAt: data.completed_at ?? null,
+        workerId: data.worker_id ?? null,
       },
     });
   }
@@ -122,25 +126,25 @@ export class Queue {
     };
   }
 
-  register(type: string, callback: (job: WorkingJob) => Promise<any>) {
-    this.handlers.set(type, callback);
+  register(type: string, worker: Worker) {
+    this.handlers.set(type, worker);
   }
 
   async processNextJob() {
-    const workingJob = await this.getNextJob();
+    const workingJob = await this.acquireNextJob();
     if (!workingJob) {
       return;
     }
 
-    const handler = this.handlers.get(workingJob.getType());
+    const worker = this.handlers.get(workingJob.getType());
 
-    if (!handler) {
+    if (!worker) {
       await workingJob.kill();
       return;
     }
 
     try {
-      await handler(workingJob);
+      await worker.process(workingJob);
       await workingJob.complete();
     } catch (error) {
       await workingJob.fail();

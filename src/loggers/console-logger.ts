@@ -1,6 +1,6 @@
-import { ILogger } from '../logger.js';
+import { Logger } from './logger.js';
 
-export class ConsoleLogger implements ILogger {
+export class ConsoleLogger implements Logger {
   info(message: string): void {
     console.log(message);
   }

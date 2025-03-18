@@ -12,7 +12,23 @@ export interface JobData<T extends Record<string, any> = Record<string, any>> {
   workerId: string | null;
 }
 
-export class WorkingJob<T extends Record<string, any> = Record<string, any>> {
+export interface ReadOnlyJob<
+  T extends Record<string, any> = Record<string, any>,
+> {
+  getType(): string;
+  getPayload(): T;
+}
+
+export interface ControllableJob {
+  complete(): Promise<void>;
+  fail(): Promise<void>;
+  requeue(): Promise<void>;
+  kill(): Promise<void>;
+}
+
+export class WorkingJob<T extends Record<string, any> = Record<string, any>>
+  implements ReadOnlyJob<T>, ControllableJob
+{
   private pool: Pool;
   private workerId: string;
   private data: JobData<T>;

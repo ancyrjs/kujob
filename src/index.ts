@@ -1,66 +1,34 @@
 import pg from 'pg';
 import { Pool } from './pool.js';
 import { Queue } from './queue.js';
-import { ILogger } from './logger.js';
+import { Logger } from './loggers/logger.js';
 import { ConsoleLogger } from './loggers/console-logger.js';
-
-type ConnectionSettings = {
-  user: string;
-  password: string;
-  host: string;
-  port: number;
-  database: string;
-};
+import { DefaultMigrator, Migrator } from './migrator/migrator.js';
+import { PoolFactory } from './pool-factory/pool-factory.js';
 
 export class Kujob {
-  private connection: ConnectionSettings;
   private pool: pg.Pool;
-  private logger: ILogger;
+  private logger: Logger;
+  private migrator: Migrator;
 
-  constructor(props: { connection: ConnectionSettings; logger?: ILogger }) {
-    this.connection = props.connection;
-    this.pool = new pg.Pool(this.connection);
+  constructor(props: {
+    poolFactory: PoolFactory;
+    logger?: Logger;
+    migrator?: Migrator;
+  }) {
+    this.pool = props.poolFactory.createPool();
     this.logger = props.logger ?? new ConsoleLogger();
+    this.migrator =
+      props.migrator ??
+      new DefaultMigrator({ pool: this.pool, logger: this.logger });
   }
 
   async start() {
-    await this.pool.query(`
-      CREATE TABLE job_queues (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(100) UNIQUE NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    await this.pool.query(`
-      CREATE TABLE jobs (
-        id UUID PRIMARY KEY,
-        queue_id INTEGER REFERENCES job_queues(id) NOT NULL,
-        type VARCHAR(100) NOT NULL,
-        payload JSONB NOT NULL,
-        status VARCHAR(20) NOT NULL DEFAULT 'pending',
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        started_at TIMESTAMP WITH TIME ZONE,
-        completed_at TIMESTAMP WITH TIME ZONE,
-        worker_id VARCHAR(100),
-        
-        CONSTRAINT valid_status CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'dead'))
-      );
-    `);
-
-    await this.pool.query(`
-        CREATE INDEX idx_jobs_status ON jobs(status);
-    `);
-
-    await this.pool.query(`
-        CREATE INDEX idx_jobs_queue_status ON jobs(queue_id, status);
-    `);
+    await this.migrator.scafold();
   }
 
   async purge() {
-    await this.pool.query('DELETE FROM jobs');
-    await this.pool.query('DELETE FROM job_queues');
+    await this.migrator.purge();
   }
 
   async end() {
@@ -78,7 +46,7 @@ export class Kujob {
     return queue;
   }
 
-  setLogger(logger: ILogger) {
+  setLogger(logger: Logger) {
     this.logger = logger;
   }
 }

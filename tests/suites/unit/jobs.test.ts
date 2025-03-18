@@ -1,24 +1,25 @@
-import {
-  PostgreSqlContainer,
-  StartedPostgreSqlContainer,
-} from '@testcontainers/postgresql';
+import { mock } from 'vitest-mock-extended';
+
 import { Kujob } from '../../../src/index.js';
 import { StackLogger } from '../../adapters/stack-logger.js';
+import { Worker } from '../../../src/worker.js';
+import { DummyWorker } from '../../adapters/dummy-worker.js';
+import { provide } from '../../config/provide.js';
+import { DefaultPoolFactory } from '../../../src/pool-factory/pool-factory.js';
 
-let container: StartedPostgreSqlContainer;
 let kujob: Kujob;
 
 beforeAll(async () => {
-  container = await new PostgreSqlContainer().start();
   kujob = new Kujob({
-    connection: {
-      user: container.getUsername(),
-      password: container.getPassword(),
-      host: container.getHost(),
-      port: container.getPort(),
-      database: container.getDatabase(),
-    },
+    poolFactory: new DefaultPoolFactory({
+      user: provide('dbUser'),
+      password: provide('dbPassword'),
+      host: provide('dbHost'),
+      port: provide('dbPort'),
+      database: provide('dbDatabase'),
+    }),
   });
+
   await kujob.start();
 });
 
@@ -28,14 +29,13 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await kujob.end();
-  await container.stop();
 });
 
 describe('the handler completes', () => {
   test('completes the job', async () => {
     const { queue, jobId } = await createQueueWithJob();
 
-    queue.register('my-job', vi.fn());
+    queue.register('my-job', new DummyWorker());
     await queue.processNextJob();
 
     const job = (await queue.getJob(jobId))!;
@@ -45,11 +45,11 @@ describe('the handler completes', () => {
   test('calls the handler', async () => {
     const { queue } = await createQueueWithJob();
 
-    const spy = vi.fn();
-    queue.register('my-job', spy);
+    const worker = mock<Worker>();
+    queue.register('my-job', worker);
     await queue.processNextJob();
 
-    expect(spy).toHaveBeenCalledOnce();
+    expect(worker.process).toHaveBeenCalledOnce();
   });
 });
 
@@ -57,10 +57,10 @@ describe('the handler fails', () => {
   test('marks the job as failed', async () => {
     const { queue, jobId } = await createQueueWithJob();
 
-    queue.register(
-      'my-job',
-      vi.fn().mockRejectedValueOnce(new Error('Failed')),
-    );
+    const worker = mock<Worker>();
+    worker.process.mockRejectedValueOnce(new Error('Failed'));
+
+    queue.register('my-job', worker);
     await queue.processNextJob();
 
     const job = (await queue.getJob(jobId))!;
@@ -91,7 +91,7 @@ describe('no handler registered', () => {
 describe('a job without handler followed by a job with handler', () => {
   test('process the job with handler', async () => {
     const queue = await kujob.createQueue('my-queue');
-    queue.register('with-handler-job', async () => {});
+    queue.register('with-handler-job', new DummyWorker());
 
     const noHandlerJobId = await queue.addJob({
       type: 'no-handler-job',
