@@ -12,6 +12,7 @@ export class Queue {
   private queueId: number;
   private handlers: Map<string, Worker> = new Map();
   private logger: Logger;
+  private pollId: NodeJS.Timeout | null = null;
 
   constructor(config: { pool: Pool; queueName: string; logger?: Logger }) {
     this.pool = config.pool;
@@ -161,18 +162,57 @@ export class Queue {
       return;
     }
 
-    const worker = this.handlers.get(workingJob.getType());
+    return this.processJob(workingJob);
+  }
+
+  async processJob(job: WorkingJob) {
+    const worker = this.handlers.get(job.getType());
 
     if (!worker) {
-      await workingJob.kill();
+      await job.kill();
       return;
     }
 
     try {
-      await worker.process(workingJob);
-      await workingJob.complete();
+      await worker.process(job);
+      await job.complete();
     } catch (error) {
-      await workingJob.failed();
+      await job.failed();
     }
+  }
+
+  async poll() {
+    let job = null;
+    do {
+      job = await this.acquireNextJob();
+      if (job) {
+        const jobToProcess = job;
+        setImmediate(() => {
+          this.processJob(jobToProcess);
+        });
+      }
+    } while (job !== null);
+
+    this.pollId = setTimeout(() => {
+      this.poll();
+    }, 50);
+  }
+
+  stopPolling() {
+    if (this.pollId) {
+      clearTimeout(this.pollId);
+      this.pollId = null;
+    }
+  }
+
+  fetchCompletedJobsCount(): Promise<number> {
+    return this.pool.runInTransaction(async (client) => {
+      const result = await client.query(
+        `SELECT COUNT(*) FROM jobs WHERE queue_id = $1 AND status = 'completed'`,
+        [this.queueId],
+      );
+
+      return parseInt(result.rows[0].count, 10);
+    });
   }
 }
