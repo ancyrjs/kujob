@@ -28,7 +28,7 @@ export class Kujob {
   }
 
   async purge() {
-    await this.migrator.purge();
+    await this.migrator.truncate();
   }
 
   async end() {
@@ -48,5 +48,9 @@ export class Kujob {
 
   setLogger(logger: Logger) {
     this.logger = logger;
+  }
+
+  getMigrator(): Migrator {
+    return this.migrator;
   }
 }

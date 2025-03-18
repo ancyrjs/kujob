@@ -4,7 +4,9 @@ import { Logger } from '../loggers/logger.js';
 export interface Migrator {
   scafold(): Promise<void>;
 
-  purge(): Promise<void>;
+  truncate(): Promise<void>;
+
+  drop(): Promise<void>;
 }
 
 export class DefaultMigrator implements Migrator {
@@ -33,6 +35,7 @@ export class DefaultMigrator implements Migrator {
             queue_id     INTEGER REFERENCES job_queues (id) NOT NULL,
             type         VARCHAR(100)                       NOT NULL,
             payload      JSONB                              NOT NULL,
+            priority     INTEGER                            NOT NULL DEFAULT 0,
             status       VARCHAR(20)                        NOT NULL DEFAULT 'pending',
             created_at   TIMESTAMP WITH TIME ZONE                    DEFAULT CURRENT_TIMESTAMP,
             updated_at   TIMESTAMP WITH TIME ZONE                    DEFAULT CURRENT_TIMESTAMP,
@@ -53,8 +56,13 @@ export class DefaultMigrator implements Migrator {
     `);
   }
 
-  async purge() {
+  async truncate() {
     await this.pool.query('DELETE FROM jobs');
     await this.pool.query('DELETE FROM job_queues');
+  }
+
+  async drop() {
+    await this.pool.query('DROP TABLE IF EXISTS jobs');
+    await this.pool.query('DROP TABLE IF EXISTS job_queues');
   }
 }

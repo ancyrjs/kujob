@@ -34,18 +34,21 @@ export class Queue {
 
   async addJob(config: {
     type: string;
-    payload: Record<string, any>;
+    payload?: Record<string, any>;
+    priority?: number;
   }): Promise<string> {
     if (!this.handlers.has(config.type)) {
       this.logger.warn(`No handler registered for job type: ${config.type}`);
     }
 
     const jobId = randomUUID();
+    const payload = config.payload ?? {};
+    const priority = config.priority ?? 0;
 
     await this.pool.runInTransaction(async (client) => {
       await client.query(
-        'INSERT INTO jobs (id, queue_id, type, payload) VALUES ($1, $2, $3, $4)',
-        [jobId, this.queueId, config.type, JSON.stringify(config.payload)],
+        'INSERT INTO jobs (id, queue_id, type, payload, priority) VALUES ($1, $2, $3, $4, $5)',
+        [jobId, this.queueId, config.type, JSON.stringify(payload), priority],
       );
     });
 
@@ -66,7 +69,7 @@ export class Queue {
          WHERE id = (
            SELECT id FROM jobs 
            WHERE queue_id = $2 AND status = 'pending'
-           ORDER BY created_at ASC
+           ORDER BY priority DESC, created_at ASC
            FOR UPDATE SKIP LOCKED
            LIMIT 1
          )
