@@ -13,6 +13,7 @@ type JobConfig = {
   payload?: Record<string, any>;
   priority?: number;
   attempts?: number;
+  delay?: number;
 };
 
 export class Queue {
@@ -76,12 +77,13 @@ export class Queue {
       }
 
       return {
-        id: config.id ?? generateUuid(),
         queueId: this.queueId,
         type: config.type,
-        payload: config.payload ?? {},
-        priority: config.priority ?? 0,
-        attempts: config.attempts ?? 1,
+        id: config?.id ?? generateUuid(),
+        payload: config?.payload ?? {},
+        priority: config?.priority ?? 0,
+        attempts: config?.attempts ?? 1,
+        delay: config?.delay ?? 0,
       };
     });
 
@@ -92,7 +94,7 @@ export class Queue {
 
     for (const job of jobEntries) {
       valueStrings.push(
-        `($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5})`,
+        `($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5}, NOW()::TIMESTAMPTZ + ($${paramIndex + 6} || ' milliseconds')::INTERVAL)`,
       );
 
       queryParams.push(
@@ -102,14 +104,16 @@ export class Queue {
         JSON.stringify(job.payload),
         job.priority,
         job.attempts,
+        job.delay.toString(),
       );
-      paramIndex += 6;
+
+      paramIndex += 7;
     }
 
     const queryText = `
-    INSERT INTO jobs (id, queue_id, type, payload, priority, attempts) 
-    VALUES ${valueStrings.join(', ')}
-  `;
+        INSERT INTO jobs (id, queue_id, type, payload, priority, attempts, scheduled_for)
+        VALUES ${valueStrings.join(', ')}
+    `;
 
     // Execute the bulk insert in a single transaction
     await this.pool.runInTransaction(async (client) => {
@@ -134,6 +138,7 @@ export class Queue {
          WHERE id IN (
            SELECT id FROM jobs 
            WHERE queue_id = $2 AND status = 'pending'
+           AND (scheduled_for <= NOW())
            ORDER BY priority DESC, enqueued_at ASC
            FOR UPDATE SKIP LOCKED
            LIMIT $3
@@ -164,6 +169,7 @@ export class Queue {
       createdAt: data.created_at,
       updatedAt: data.updated_at,
       enqueuedAt: data.enqueuedAt,
+      scheduledFor: data.scheduledFor,
       startedAt: data.started_at ?? null,
       completedAt: data.completed_at ?? null,
       workerId: data.worker_id ?? null,

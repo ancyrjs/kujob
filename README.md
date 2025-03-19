@@ -14,9 +14,9 @@ I wrote this package for two reasons :
 - Group jobs into queues
 - Prioritize jobs within a queue
 - Retry failed jobs a fixed number of times
-- Run jobs only after a certain delay (TODO)
-- Configure either a linear or exponential backoff for failed jobs (TODO)
+- Delayed Jobs
 - Repeatable Jobs (TODO)
+- Configure either a linear or exponential backoff for failed jobs (TODO)
 - Testability with in-memory scheduling (TODO)
 - Emitting & Intercepting job events (TODO)
 - Recovery of stalled jobs (TODO)

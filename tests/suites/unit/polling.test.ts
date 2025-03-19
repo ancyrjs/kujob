@@ -1,6 +1,7 @@
 import { DummyWorker } from '../../adapters/dummy-worker.js';
 import { Tester } from '../../config/tester.js';
 import { generateUuid } from '../../../src/generate-uuid.js';
+import { waitFor } from '../../config/wait-for.js';
 
 let tester = new Tester();
 
@@ -18,9 +19,6 @@ test('run to completion', async () => {
   await queue.addJobs(jobIds.map((id) => ({ type: 'job', id })));
 
   queue.startPolling();
-
-  const waitFor = (delay: number) =>
-    new Promise((resolve) => setTimeout(resolve, delay));
 
   await waitFor(100);
 

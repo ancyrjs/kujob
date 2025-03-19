@@ -10,6 +10,7 @@ export interface JobData<T extends Record<string, any> = Record<string, any>> {
   createdAt: Date;
   updatedAt: Date;
   enqueuedAt: Date;
+  scheduledFor: Date;
   startedAt: Date | null;
   completedAt: Date | null;
   workerId: string | null;

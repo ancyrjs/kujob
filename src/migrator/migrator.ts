@@ -31,19 +31,20 @@ export class DefaultMigrator implements Migrator {
     await this.pool.query(`
         CREATE TABLE IF NOT EXISTS jobs
         (
-            id           UUID PRIMARY KEY,
-            queue_id     INTEGER REFERENCES job_queues (id) NOT NULL,
-            type         VARCHAR(100)                       NOT NULL,
-            payload      JSONB                              NOT NULL,
-            priority     INTEGER                            NOT NULL DEFAULT 0,
-            status       VARCHAR(20)                        NOT NULL DEFAULT 'pending',
-            attempts     INTEGER                            NOT NULL DEFAULT 1,
-            created_at   TIMESTAMP WITH TIME ZONE                    DEFAULT CURRENT_TIMESTAMP,
-            updated_at   TIMESTAMP WITH TIME ZONE                    DEFAULT CURRENT_TIMESTAMP,
-            enqueued_at  TIMESTAMP WITH TIME ZONE                    DEFAULT CURRENT_TIMESTAMP,
-            started_at   TIMESTAMP WITH TIME ZONE,
-            completed_at TIMESTAMP WITH TIME ZONE,
-            worker_id    VARCHAR(100),
+            id              UUID PRIMARY KEY,
+            queue_id        INTEGER REFERENCES job_queues (id) NOT NULL,
+            type            VARCHAR(100)                       NOT NULL,
+            payload         JSONB                              NOT NULL,
+            priority        INTEGER                            NOT NULL DEFAULT 0,
+            status          VARCHAR(20)                        NOT NULL DEFAULT 'pending',
+            attempts        INTEGER                            NOT NULL DEFAULT 1,
+            created_at      TIMESTAMP WITH TIME ZONE                    DEFAULT CURRENT_TIMESTAMP,
+            updated_at      TIMESTAMP WITH TIME ZONE                    DEFAULT CURRENT_TIMESTAMP,
+            enqueued_at     TIMESTAMP WITH TIME ZONE                    DEFAULT CURRENT_TIMESTAMP,
+            scheduled_for   TIMESTAMP WITH TIME ZONE                    DEFAULT CURRENT_TIMESTAMP,
+            started_at      TIMESTAMP WITH TIME ZONE,
+            completed_at    TIMESTAMP WITH TIME ZONE,
+            worker_id       VARCHAR(100),
 
             CONSTRAINT valid_status CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'dead'))
         );
