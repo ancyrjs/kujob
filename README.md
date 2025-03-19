@@ -17,7 +17,7 @@ I wrote this package for two reasons :
 - Delayed Jobs
 - Repeatable Jobs (TODO)
 - Configure either a linear or exponential backoff for failed jobs (TODO)
+- Recovery of stalled jobs (TODO)
 - Testability with in-memory scheduling (TODO)
 - Emitting & Intercepting job events (TODO)
-- Recovery of stalled jobs (TODO)
 - Integration with NestJS (TODO)
