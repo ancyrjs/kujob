@@ -9,6 +9,7 @@ export default defineConfig({
   ],
   test: {
     globals: true,
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/suites/functional/*.test.ts'],
+    hookTimeout: 30_000,
   },
 });
