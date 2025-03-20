@@ -11,5 +11,8 @@ export default defineConfig({
     globals: true,
     include: ['tests/suites/functional/*.test.ts'],
     hookTimeout: 30_000,
+    coverage: {
+      provider: 'v8',
+    },
   },
 });

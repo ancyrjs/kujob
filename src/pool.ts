@@ -7,18 +7,10 @@ export class Pool {
     this.pool = config.pool;
   }
 
-  connect() {
-    return this.pool.connect();
-  }
-
-  end() {
-    return this.pool.end();
-  }
-
-  raw() {
-    return this.pool;
-  }
-
+  /**
+   * Invokes the callback within a transaction
+   * @param callback
+   */
   async runInTransaction<T>(callback: (client: pg.PoolClient) => Promise<T>) {
     const client = await this.pool.connect();
 
