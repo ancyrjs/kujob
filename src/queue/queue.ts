@@ -205,6 +205,7 @@ export class Queue {
 
   /**
    * Fetch the number completed jobs in the queue
+   * @returns Number of completed jobs
    */
   fetchCompletedJobsCount(): Promise<number> {
     return this.pool.runInTransaction(async (client) => {
