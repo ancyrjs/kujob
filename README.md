@@ -15,7 +15,8 @@ I wrote this package for two reasons :
 - Prioritize jobs within a queue
 - Retry failed jobs a fixed number of times
 - Delayed Jobs
-- Repeatable Jobs (TODO)
+- Custom Scheduling (TODO)
+- Worker Limiter (max job concurrency) (TODO)
 - Configure either a linear or exponential backoff for failed jobs (TODO)
 - Recovery of stalled jobs (TODO)
 - Testability with in-memory scheduling (TODO)
