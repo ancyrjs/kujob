@@ -31,7 +31,7 @@ export interface ControllableJob {
   kill(): Promise<void>;
 }
 
-export class WorkingJob<T extends Record<string, any> = Record<string, any>>
+export class Job<T extends Record<string, any> = Record<string, any>>
   implements ReadOnlyJob<T>, ControllableJob
 {
   private readonly pool: Pool;

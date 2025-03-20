@@ -1,8 +1,8 @@
-import { WorkingJob } from '../job.js';
+import { Job } from '../job.js';
 
 export type PollApi = {
-  acquireNextJobs(props: { count: number }): Promise<WorkingJob[]>;
-  processJob(job: WorkingJob): Promise<void>;
+  acquireNextJobs(props: { count: number }): Promise<Job[]>;
+  processJob(job: Job): Promise<void>;
 };
 
 /**

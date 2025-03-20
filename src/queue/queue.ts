@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Pool } from '../pool.js';
-import { JobData, WorkingJob } from '../job.js';
+import { Job, JobData } from '../job.js';
 import { Logger } from '../loggers/logger.js';
 import { ConsoleLogger } from '../loggers/console-logger.js';
 import { Worker } from '../worker.js';
@@ -75,7 +75,7 @@ export class Queue {
    * Acquire the next jobs to process
    * @param count
    */
-  async acquireNextJobs({ count }: { count: number }): Promise<WorkingJob[]> {
+  async acquireNextJobs({ count }: { count: number }): Promise<Job[]> {
     const result = await this.pool.runInTransaction(async (client) =>
       client.query(
         `UPDATE jobs 
@@ -98,7 +98,7 @@ export class Queue {
 
     return result.rows.map(
       (row) =>
-        new WorkingJob({
+        new Job({
           pool: this.pool,
           workerId: this.workerId,
           data: this.sqlToJobData(row),
@@ -172,7 +172,7 @@ export class Queue {
    * Process the job and manage its lifecycle
    * @param job
    */
-  async processJob(job: WorkingJob) {
+  async processJob(job: Job) {
     const worker = this.handlers.get(job.getType());
 
     if (!worker) {
