@@ -41,14 +41,25 @@ export class DefaultPoller implements Poller {
     }
 
     const jobs = await api.acquireNextJobs({ count: this.batch });
-    for (const job of jobs) {
-      process.nextTick(() => {
-        api.processJob(job);
-      });
-    }
+    let completed = 0;
 
-    this.handle = setTimeout(() => {
-      this.run(api);
-    }, this.delay);
+    const onJobCompleted = () => {
+      if (completed === jobs.length) {
+        this.handle = setTimeout(() => {
+          this.run(api);
+        }, this.delay);
+      }
+    };
+
+    jobs.forEach((job) => {
+      process.nextTick(async () => {
+        try {
+          await api.processJob(job);
+        } catch (e) {}
+
+        completed++;
+        onJobCompleted();
+      });
+    });
   }
 }

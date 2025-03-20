@@ -1,20 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { Pool } from './pool.js';
-import { JobData, WorkingJob } from './job.js';
-import { Logger } from './loggers/logger.js';
-import { ConsoleLogger } from './loggers/console-logger.js';
-import { Worker } from './worker.js';
-import { Poller } from './poller/poller.js';
-import { generateUuid } from './generate-uuid.js';
-
-type JobConfig = {
-  type: string;
-  id?: string;
-  payload?: Record<string, any>;
-  priority?: number;
-  attempts?: number;
-  delay?: number;
-};
+import { Pool } from '../pool.js';
+import { JobData, WorkingJob } from '../job.js';
+import { Logger } from '../loggers/logger.js';
+import { ConsoleLogger } from '../loggers/console-logger.js';
+import { Worker } from '../worker.js';
+import { Poller } from '../poller/poller.js';
+import { AddJobInput, AddJobsCommand } from './add-jobs-command.js';
 
 export class Queue {
   private pool: Pool;
@@ -55,77 +46,34 @@ export class Queue {
    * @param config
    * @returns Job ID
    */
-  async addJob(config: JobConfig): Promise<string> {
+  async addJob(config: AddJobInput): Promise<string> {
     const result = await this.addJobs([config]);
     return result[0];
   }
 
   /**
    * Add multiple jobs to the queue
-   * @param configs
+   * @param jobs
    * @returns List of job IDs
    */
-  async addJobs(configs: JobConfig[]): Promise<string[]> {
-    if (configs.length === 0) {
-      return [];
-    }
-
-    // Pre-process all configs and validate handlers
-    const jobEntries = configs.map((config) => {
-      if (!this.handlers.has(config.type)) {
-        this.logger.warn(`No handler registered for job type: ${config.type}`);
+  async addJobs(jobs: AddJobInput[]): Promise<string[]> {
+    // warn for jobs that can't be handled
+    jobs.forEach((job) => {
+      if (!this.handlers.has(job.type)) {
+        this.logger.warn(`No handler registered for job type: ${job.type}`);
       }
-
-      return {
-        queueId: this.queueId,
-        type: config.type,
-        id: config?.id ?? generateUuid(),
-        payload: config?.payload ?? {},
-        priority: config?.priority ?? 0,
-        attempts: config?.attempts ?? 1,
-        delay: config?.delay ?? 0,
-      };
     });
 
-    // Build a single parameterized query for all jobs
-    const valueStrings = [];
-    const queryParams: any[] = [];
-    let paramIndex = 1;
-
-    for (const job of jobEntries) {
-      valueStrings.push(
-        `($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5}, NOW()::TIMESTAMPTZ + ($${paramIndex + 6} || ' milliseconds')::INTERVAL)`,
-      );
-
-      queryParams.push(
-        job.id,
-        job.queueId,
-        job.type,
-        JSON.stringify(job.payload),
-        job.priority,
-        job.attempts,
-        job.delay.toString(),
-      );
-
-      paramIndex += 7;
-    }
-
-    const queryText = `
-        INSERT INTO jobs (id, queue_id, type, payload, priority, attempts, scheduled_for)
-        VALUES ${valueStrings.join(', ')}
-    `;
-
-    // Execute the bulk insert in a single transaction
-    await this.pool.runInTransaction(async (client) => {
-      await client.query(queryText, queryParams);
-    });
-
-    // Return all generated job IDs
-    return jobEntries.map((job) => job.id);
+    return new AddJobsCommand({
+      pool: this.pool,
+      queueId: this.queueId,
+      logger: this.logger,
+    }).execute(jobs);
   }
 
   /**
-   * Fetch the next job from the queue and lock it
+   * Acquire the next jobs to process
+   * @param count
    */
   async acquireNextJobs({ count }: { count: number }): Promise<WorkingJob[]> {
     const result = await this.pool.runInTransaction(async (client) =>
@@ -217,9 +165,13 @@ export class Queue {
       return;
     }
 
-    return this.processJob(workingJobs[0]);
+    await this.processJob(workingJobs[0]);
   }
 
+  /**
+   * Process the job and manage its lifecycle
+   * @param job
+   */
   async processJob(job: WorkingJob) {
     const worker = this.handlers.get(job.getType());
 
@@ -236,14 +188,24 @@ export class Queue {
     }
   }
 
-  async startPolling() {
+  /**
+   * Begin polling for jobs
+   * This method will not return until the polling is stopped so it should not be awaited
+   */
+  startPolling() {
     return this.poller.start(this);
   }
 
+  /**
+   * Stop polling for jobs
+   */
   stopPolling() {
     return this.poller.stop();
   }
 
+  /**
+   * Fetch the number completed jobs in the queue
+   */
   fetchCompletedJobsCount(): Promise<number> {
     return this.pool.runInTransaction(async (client) => {
       const result = await client.query(

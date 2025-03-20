@@ -1,6 +1,6 @@
 import pg from 'pg';
 import { Pool } from './pool.js';
-import { Queue } from './queue.js';
+import { Queue } from './queue/queue.js';
 import { Logger } from './loggers/logger.js';
 import { ConsoleLogger } from './loggers/console-logger.js';
 import { DefaultMigrator, Migrator } from './migrator/migrator.js';
