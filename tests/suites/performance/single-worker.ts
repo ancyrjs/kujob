@@ -31,7 +31,8 @@ const jobsToCreate = 10_000;
 const jobIds = Array.from({ length: jobsToCreate }, () => generateUuid());
 
 const queue = await kujob.createQueue('queue');
-queue.register('job', new DummyWorker());
+const worker = new DummyWorker();
+queue.register(worker);
 
 let result = await Timer.wrap<any>(() =>
   queue.addJobs(jobIds.map((jobId) => ({ type: 'job', id: jobId }))),
@@ -43,12 +44,12 @@ let completedJobsCount = 0;
 
 result = await Timer.wrap<any>(async () => {
   do {
-    await queue.startPolling();
+    await worker.startPolling();
     completedJobsCount = await queue.fetchCompletedJobsCount();
   } while (completedJobsCount !== jobIds.length);
 });
 
 console.log(`Completed ${completedJobsCount} jobs in ${result.time}ms`);
 
-await queue.stopPolling();
+await worker.stopPolling();
 await kujob.end();

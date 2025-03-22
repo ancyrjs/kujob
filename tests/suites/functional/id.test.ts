@@ -11,14 +11,15 @@ afterAll(() => tester.afterAll());
 test('pass a custom id to the job', async () => {
   const ID = generateUuid();
 
+  const worker = new DummyWorker();
   const queue = await tester.getKujob().createQueue('my-queue');
-  queue.register('job', new DummyWorker());
+  queue.register(worker);
 
   await queue.addJob({
     type: 'job',
     id: ID,
   });
-  await queue.processNextJob();
+  await worker.processNextJob();
 
   const job = await queue.readJob(ID);
   expect(job).not.toBeNull();

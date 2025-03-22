@@ -1,7 +1,7 @@
-import { Worker } from '../../src/worker.js';
+import { BaseWorker } from '../../src/worker.js';
 import { Job } from '../../src/job.js';
 
-export class FailingWorker implements Worker {
+export class FailingWorker extends BaseWorker {
   async process(job: Job): Promise<any> {
     throw new Error('Job Failed');
   }

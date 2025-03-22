@@ -9,7 +9,8 @@ afterAll(() => tester.afterAll());
 
 test('process the job with higher priority first', async () => {
   const queue = await tester.getKujob().createQueue('my-queue');
-  queue.register('job', new DummyWorker());
+  const worker = new DummyWorker();
+  queue.register(worker);
 
   const lowPri = await queue.addJob({
     type: 'job',
@@ -20,7 +21,7 @@ test('process the job with higher priority first', async () => {
     priority: 2,
   });
 
-  await queue.processNextJob();
+  await worker.processNextJob();
 
   const highPriJob = (await queue.readJob(highPri))!;
   expect(highPriJob.status).toBe('completed');
@@ -31,7 +32,8 @@ test('process the job with higher priority first', async () => {
 
 test('when the priority is the same, process the earlier one', async () => {
   const queue = await tester.getKujob().createQueue('my-queue');
-  queue.register('job', new DummyWorker());
+  const worker = new DummyWorker();
+  queue.register(worker);
 
   const first = await queue.addJob({
     type: 'job',
@@ -42,7 +44,7 @@ test('when the priority is the same, process the earlier one', async () => {
     priority: 2,
   });
 
-  await queue.processNextJob();
+  await worker.processNextJob();
 
   const completedJob = (await queue.readJob(first))!;
   expect(completedJob.status).toBe('completed');

@@ -13,16 +13,17 @@ test('run to completion', async () => {
   const kujob = tester.getKujob();
 
   const queue = await kujob.createQueue('my-queue');
-  queue.register('job', new DummyWorker());
+  const worker = new DummyWorker();
+  queue.register(worker);
 
   const jobIds = [generateUuid(), generateUuid(), generateUuid()];
   await queue.addJobs(jobIds.map((id) => ({ type: 'job', id })));
 
-  queue.startPolling();
+  worker.startPolling();
 
   await waitFor(100);
 
-  queue.stopPolling();
+  worker.stopPolling();
 
   const completedJobs: string[] = [];
   for (const id of jobIds) {

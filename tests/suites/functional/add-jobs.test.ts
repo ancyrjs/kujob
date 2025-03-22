@@ -13,7 +13,7 @@ test('adding many jobs to the queue', async () => {
   const kujob = tester.getKujob();
 
   const queue = await kujob.createQueue('my-queue');
-  queue.register('queue', new DummyWorker());
+  queue.register(new DummyWorker());
 
   const jobIds = [generateUuid(), generateUuid(), generateUuid()];
 
@@ -49,21 +49,21 @@ test(
 
     const queue = await kujob.createQueue('my-queue');
     const worker = new CountingWorker();
-    queue.register('queue', worker);
+    queue.register(worker);
 
     const jobCount = 10_000;
     const jobIds = Array.from({ length: jobCount }, () => generateUuid());
 
     await queue.addJobs(jobIds.map((id) => ({ type: 'queue', id })));
-    queue.startPolling();
+    worker.startPolling();
 
     let completedJobsCount = 0;
     do {
-      await queue.startPolling();
+      await worker.startPolling();
       completedJobsCount = await queue.fetchCompletedJobsCount();
     } while (completedJobsCount !== jobIds.length);
 
-    await queue.stopPolling();
+    await worker.stopPolling();
 
     expect(worker.getCount()).toBe(jobIds.length);
   },

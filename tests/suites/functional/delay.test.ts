@@ -11,7 +11,8 @@ afterAll(() => tester.afterAll());
 
 test('the job should not execute if the delay has not passed yet', async () => {
   const queue = await tester.getKujob().createQueue('my-queue');
-  queue.register('job', new DummyWorker());
+  const worker = new DummyWorker();
+  queue.register(worker);
 
   const id = generateUuid();
   await queue.addJob({
@@ -20,7 +21,7 @@ test('the job should not execute if the delay has not passed yet', async () => {
     delay: 100,
   });
 
-  await queue.processNextJob();
+  await worker.processNextJob();
 
   const job = (await queue.readJob(id))!;
   expect(job.status).toBe('pending');
@@ -28,7 +29,8 @@ test('the job should not execute if the delay has not passed yet', async () => {
 
 test('the job should execute after the delay', async () => {
   const queue = await tester.getKujob().createQueue('my-queue');
-  queue.register('job', new DummyWorker());
+  const worker = new DummyWorker();
+  queue.register(worker);
 
   const id = generateUuid();
   await queue.addJob({
@@ -39,7 +41,7 @@ test('the job should execute after the delay', async () => {
 
   // Of course delays are not a precise measure so this test might be a little bit flaky
   await waitFor(100);
-  await queue.processNextJob();
+  await worker.processNextJob();
 
   const job = (await queue.readJob(id))!;
   expect(job.status).toBe('completed');
