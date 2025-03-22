@@ -17,7 +17,7 @@ export interface JobData<T extends Record<string, any> = Record<string, any>> {
   workerId: string | null;
 }
 
-export interface ReadOnlyJob<
+export interface ProcessingJob<
   T extends Record<string, any> = Record<string, any>,
 > {
   getId(): string;
@@ -25,7 +25,7 @@ export interface ReadOnlyJob<
   getPayload(): T;
 }
 
-export interface ControllableJob {
+export interface ControllingJob {
   complete(): Promise<void>;
   fail(): Promise<void>;
   requeue(): Promise<void>;
@@ -41,7 +41,7 @@ class NoopObserver implements JobObserver {
 }
 
 export class Job<T extends Record<string, any> = Record<string, any>>
-  implements ReadOnlyJob<T>, ControllableJob
+  implements ProcessingJob<T>, ControllingJob
 {
   private readonly pool: Pool;
   private readonly workerId: string;

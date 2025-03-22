@@ -1,4 +1,4 @@
-import { Job, JobData, JobObserver, ReadOnlyJob } from './job.js';
+import { Job, JobData, JobObserver, ProcessingJob } from './job.js';
 import { Pool } from './pool.js';
 import { Poller } from './poller/poller.js';
 import { generateUuid } from './generate-uuid.js';
@@ -6,7 +6,7 @@ import { PoolClient } from 'pg';
 import { Limiter } from './queue/limiter.js';
 
 export interface Worker<T extends Record<string, any> = Record<string, any>> {
-  process(job: ReadOnlyJob<T>): Promise<any>;
+  process(job: ProcessingJob<T>): Promise<any>;
   getId(): string;
   processNextJob(): Promise<void>;
   startPolling(): void;
@@ -48,7 +48,11 @@ export abstract class BaseWorker<
     this.limiter = config.limiter;
   }
 
-  abstract process(job: ReadOnlyJob<T>): Promise<any>;
+  /**
+   * The actual method that does the processing
+   * @param job
+   */
+  abstract process(job: ProcessingJob<T>): Promise<any>;
 
   /**
    * Acquire the next job and process it.

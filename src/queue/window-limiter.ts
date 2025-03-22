@@ -1,7 +1,13 @@
 import { endOfMinute, startOfMinute } from 'date-fns';
 import { JobsToFetchPayload, Limiter } from './limiter.js';
 
+/**
+ * Implements a sliding window algorithm to decide how many jobs a worker can fetch
+ */
 export class WindowLimiter implements Limiter {
+  /**
+   * The delay in seconds to consider a worker as active
+   */
   static HEARTBEAT_DELAY = 120;
 
   private max: number;
@@ -32,12 +38,11 @@ export class WindowLimiter implements Limiter {
       10,
     );
 
-    const windowStart = startOfMinute(new Date());
-    const windowEnd = endOfMinute(new Date());
+    const window = new SlidingWindow();
 
     const activeJobsQuery = await client.query(
       `SELECT COUNT(*) AS processing_jobs FROM jobs WHERE status = 'completed' AND started_at >= $1 AND started_at <= $2`,
-      [windowStart, windowEnd],
+      [window.getStart(), window.getEnd()],
     );
 
     const activeJobs = parseInt(activeJobsQuery.rows[0].processing_jobs, 10);
@@ -47,5 +52,24 @@ export class WindowLimiter implements Limiter {
     const jobsRemaining = jobsPerMinute - activeJobs;
 
     return Math.min(maxJobsPerMinute, jobsRemaining);
+  }
+}
+
+class SlidingWindow {
+  private start: Date;
+
+  private end: Date;
+
+  constructor() {
+    this.start = startOfMinute(new Date());
+    this.end = endOfMinute(new Date());
+  }
+
+  getStart() {
+    return this.start;
+  }
+
+  getEnd() {
+    return this.end;
   }
 }
