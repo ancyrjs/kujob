@@ -1,8 +1,8 @@
-import { DefaultLimiter } from '../../../../src/queue/limiter.js';
+import { DefaultLimitSpecification } from '../../../../src/queue/limit-spec.js';
 
 describe('default limiter', () => {
   test('limit', () => {
-    const limiter = new DefaultLimiter({
+    const limiter = new DefaultLimitSpecification({
       max: 10,
       every: 10,
     });

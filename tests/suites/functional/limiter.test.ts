@@ -1,9 +1,9 @@
 import { Tester } from '../../config/tester.js';
-import { DefaultLimiter } from '../../../src/queue/limiter.js';
 import { CountingWorker } from '../../adapters/counting-worker.js';
 import { generateUuid } from '../../../src/generate-uuid.js';
 import { waitFor } from '../../config/wait-for.js';
 import { OncePoller } from '../../../src/poller/once-poller.js';
+import { WindowLimiter } from '../../../src/queue/window-limiter.js';
 
 let tester = new Tester();
 
@@ -15,7 +15,7 @@ test('only one job should be processed by the worker', async () => {
   const kujob = tester.getKujob();
 
   const queue = await kujob.createQueue('my-queue', {
-    limiter: new DefaultLimiter({ max: 1, every: 60 }),
+    limiter: new WindowLimiter({ max: 1, every: 60 }),
   });
 
   const workerA = new CountingWorker();
@@ -39,7 +39,7 @@ test('two workers should share the same rate limit', async () => {
   const kujob = tester.getKujob();
 
   const queue = await kujob.createQueue('my-queue', {
-    limiter: new DefaultLimiter({ max: 1, every: 60 }),
+    limiter: new WindowLimiter({ max: 1, every: 60 }),
   });
 
   const workerA = new CountingWorker();
@@ -68,7 +68,7 @@ test('spreading evenly', async () => {
   const kujob = tester.getKujob();
 
   const queue = await kujob.createQueue('my-queue', {
-    limiter: new DefaultLimiter({ max: 4, every: 60 }),
+    limiter: new WindowLimiter({ max: 4, every: 60 }),
     poller: new OncePoller({ batch: 100 }),
   });
 

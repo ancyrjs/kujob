@@ -4,7 +4,6 @@ import { Poller } from './poller/poller.js';
 import { generateUuid } from './generate-uuid.js';
 import { PoolClient } from 'pg';
 import { Limiter } from './queue/limiter.js';
-import { endOfMinute, startOfMinute } from 'date-fns';
 
 export interface Worker<T extends Record<string, any> = Record<string, any>> {
   process(job: ReadOnlyJob<T>): Promise<any>;
@@ -98,42 +97,13 @@ export abstract class BaseWorker<
    */
   async acquireNextJobs({ count }: { count: number }): Promise<Job<T>[]> {
     const result = await this.pool.transaction(async (client) => {
-      let jobsToFetch = count;
+      const jobsToFetch = await this.limiter.jobsToFetch({
+        desired: count,
+        client,
+      });
 
-      if (this.limiter.isLimited()) {
-        const heartBeatDelay = 120;
-        const activeWorkersQuery = await client.query(
-          `SELECT COUNT(*) AS active_workers FROM workers WHERE heartbeat > NOW() - INTERVAL '${heartBeatDelay} seconds'`,
-          [],
-        );
-
-        const activeWorkersCount = parseInt(
-          activeWorkersQuery.rows[0].active_workers,
-          10,
-        );
-
-        const windowStart = startOfMinute(new Date());
-        const windowEnd = endOfMinute(new Date());
-
-        const activeJobsQuery = await client.query(
-          `SELECT COUNT(*) AS processing_jobs FROM jobs WHERE status = 'completed' AND started_at >= $1 AND started_at <= $2`,
-          [windowStart, windowEnd],
-        );
-
-        const activeJobs = parseInt(
-          activeJobsQuery.rows[0].processing_jobs,
-          10,
-        );
-
-        const jobsPerMinute = this.limiter.jobsPerMinute();
-
-        const maxJobsPerMinute = Math.ceil(jobsPerMinute / activeWorkersCount);
-        const jobsRemaining = jobsPerMinute - activeJobs;
-        jobsToFetch = Math.min(maxJobsPerMinute, jobsRemaining);
-
-        if (jobsToFetch === 0) {
-          return [];
-        }
+      if (jobsToFetch === 0) {
+        return [];
       }
 
       const result = await client.query(
@@ -153,6 +123,8 @@ export abstract class BaseWorker<
          RETURNING *`,
         [this.workerId, this.queueId, jobsToFetch],
       );
+
+      await this.heartbeat(client);
 
       return result.rows;
     });

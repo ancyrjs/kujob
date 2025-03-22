@@ -6,7 +6,8 @@ import { ConsoleLogger } from '../loggers/console-logger.js';
 import { BaseWorker } from '../worker.js';
 import { Poller } from '../poller/poller.js';
 import { AddJobInput, AddJobsCommand } from './add-jobs-command.js';
-import { Limiter, UnboundedLimiter } from './limiter.js';
+import { Limiter } from './limiter.js';
+import { UnboundedLimiter } from './unbounded-limiter.js';
 
 export class Queue {
   private pool: Pool;
