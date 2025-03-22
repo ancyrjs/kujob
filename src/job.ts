@@ -1,4 +1,5 @@
 import { Pool } from './pool.js';
+import { PoolClient } from 'pg';
 
 export interface JobData<T extends Record<string, any> = Record<string, any>> {
   id: string;
@@ -31,17 +32,32 @@ export interface ControllableJob {
   kill(): Promise<void>;
 }
 
+export interface JobObserver {
+  onUpdate: (client: PoolClient) => Promise<void>;
+}
+
+class NoopObserver implements JobObserver {
+  async onUpdate() {}
+}
+
 export class Job<T extends Record<string, any> = Record<string, any>>
   implements ReadOnlyJob<T>, ControllableJob
 {
   private readonly pool: Pool;
   private readonly workerId: string;
   private readonly data: JobData<T>;
+  private readonly observer: JobObserver;
 
-  constructor(config: { pool: Pool; workerId: string; data: JobData<T> }) {
+  constructor(config: {
+    pool: Pool;
+    workerId: string;
+    data: JobData<T>;
+    observer?: JobObserver;
+  }) {
     this.pool = config.pool;
     this.workerId = config.workerId;
     this.data = config.data;
+    this.observer = config.observer ?? new NoopObserver();
   }
 
   getId() {
@@ -65,7 +81,7 @@ export class Job<T extends Record<string, any> = Record<string, any>>
   }
 
   async complete(): Promise<void> {
-    await this.pool.runInTransaction((client) => {
+    await this.update((client) => {
       return client.query(
         `UPDATE jobs 
          SET status = 'completed', 
@@ -78,7 +94,7 @@ export class Job<T extends Record<string, any> = Record<string, any>>
   }
 
   async fail(): Promise<void> {
-    await this.pool.runInTransaction((client) => {
+    await this.update((client) => {
       return client.query(
         `UPDATE jobs 
          SET status = 'failed', 
@@ -90,7 +106,7 @@ export class Job<T extends Record<string, any> = Record<string, any>>
   }
 
   async requeue(): Promise<void> {
-    await this.pool.runInTransaction((client) => {
+    await this.update((client) => {
       return client.query(
         `UPDATE jobs
          SET status = 'pending',
@@ -106,7 +122,7 @@ export class Job<T extends Record<string, any> = Record<string, any>>
   }
 
   async kill(): Promise<void> {
-    await this.pool.runInTransaction((client) => {
+    await this.update(async (client) => {
       return client.query(
         `UPDATE jobs 
          SET status = 'dead', 
@@ -116,6 +132,13 @@ export class Job<T extends Record<string, any> = Record<string, any>>
          WHERE id = $1 AND worker_id = $2`,
         [this.data.id, this.workerId],
       );
+    });
+  }
+
+  private async update(callback: (client: PoolClient) => Promise<any>) {
+    await this.pool.transaction(async (client) => {
+      await callback(client);
+      await this.observer.onUpdate(client);
     });
   }
 }

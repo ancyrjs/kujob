@@ -54,7 +54,7 @@ export class AddJobsCommand {
     const queries = chunks.map(this.toInsertQuery.bind(this));
 
     // transactional bulk insert
-    await this.pool.runInTransaction(async (client) => {
+    await this.pool.transaction(async (client) => {
       // Note : does it make sense to run it sequentially or can we run them in Promise.all ?
       for (const { queryText, queryParams } of queries) {
         await client.query(queryText, queryParams);

@@ -6,6 +6,7 @@ import { ConsoleLogger } from '../loggers/console-logger.js';
 import { BaseWorker } from '../worker.js';
 import { Poller } from '../poller/poller.js';
 import { AddJobInput, AddJobsCommand } from './add-jobs-command.js';
+import { Limiter, UnboundedLimiter } from './limiter.js';
 
 export class Queue {
   private pool: Pool;
@@ -14,23 +15,27 @@ export class Queue {
   private queueId: number;
   private logger: Logger;
   private poller: Poller;
+  private limiter: Limiter;
 
   constructor(config: {
     pool: Pool;
     queueName: string;
-    logger?: Logger;
     poller: Poller;
+    logger?: Logger;
+    limiter?: Limiter;
   }) {
     this.pool = config.pool;
     this.queueName = config.queueName;
     this.workerId = `worker-${randomUUID()}`;
     this.queueId = 0;
-    this.logger = config.logger ?? new ConsoleLogger();
     this.poller = config.poller;
+
+    this.logger = config.logger ?? new ConsoleLogger();
+    this.limiter = config.limiter ?? new UnboundedLimiter();
   }
 
   async initialize() {
-    await this.pool.runInTransaction(async (client) => {
+    await this.pool.transaction(async (client) => {
       const queueResult = await client.query(
         'INSERT INTO job_queues (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = $1 RETURNING id',
         [this.queueName],
@@ -86,7 +91,7 @@ export class Queue {
    * @param id
    */
   async readJob(id: string): Promise<JobData | null> {
-    const result = await this.pool.runInTransaction(async (client) =>
+    const result = await this.pool.transaction(async (client) =>
       client.query(
         `
         SELECT * FROM jobs
@@ -107,12 +112,24 @@ export class Queue {
    * Register the worker as the processor for the given job type
    * @param worker
    */
-  register(worker: BaseWorker) {
+  async register(worker: BaseWorker) {
     worker.inject({
       pool: this.pool,
       queueId: this.queueId,
-      logger: this.logger,
-      poller: this.poller,
+      poller: this.poller.clone(),
+      limiter: this.limiter,
+    });
+
+    await this.pool.transaction(async (client) => {
+      await client.query(
+        `
+            INSERT INTO workers (id) 
+            VALUES ($1) 
+            ON CONFLICT (id) 
+            DO UPDATE SET heartbeat = NOW()
+        `,
+        [worker.getId()],
+      );
     });
   }
 
@@ -121,7 +138,7 @@ export class Queue {
    * @returns Number of completed jobs
    */
   fetchCompletedJobsCount(): Promise<number> {
-    return this.pool.runInTransaction(async (client) => {
+    return this.pool.transaction(async (client) => {
       const result = await client.query(
         `SELECT COUNT(*) FROM jobs WHERE queue_id = $1 AND status = 'completed'`,
         [this.queueId],

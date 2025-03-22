@@ -62,4 +62,8 @@ export class DefaultPoller implements Poller {
       });
     });
   }
+
+  clone(): Poller {
+    return new DefaultPoller({ delay: this.delay, batch: this.batch });
+  }
 }

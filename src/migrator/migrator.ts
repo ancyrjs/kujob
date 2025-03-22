@@ -51,6 +51,15 @@ export class DefaultMigrator implements Migrator {
     `);
 
     await this.pool.query(`
+        CREATE TABLE IF NOT EXISTS workers
+        (
+            id              VARCHAR(100) PRIMARY KEY,
+            created_at      TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            heartbeat       TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    await this.pool.query(`
         CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs (status);
     `);
 
@@ -62,10 +71,12 @@ export class DefaultMigrator implements Migrator {
   async truncate() {
     await this.pool.query('DELETE FROM jobs');
     await this.pool.query('DELETE FROM job_queues');
+    await this.pool.query('DELETE FROM workers');
   }
 
   async drop() {
     await this.pool.query('DROP TABLE IF EXISTS jobs');
     await this.pool.query('DROP TABLE IF EXISTS job_queues');
+    await this.pool.query('DROP TABLE IF EXISTS workers');
   }
 }

@@ -11,4 +11,5 @@ export type PollApi = {
 export interface Poller {
   start(api: PollApi): Promise<void>;
   stop(): Promise<void>;
+  clone(): Poller;
 }

@@ -11,7 +11,7 @@ export class Pool {
    * Invokes the callback within a transaction
    * @param callback
    */
-  async runInTransaction<T>(callback: (client: pg.PoolClient) => Promise<T>) {
+  async transaction<T>(callback: (client: pg.PoolClient) => Promise<T>) {
     const client = await this.pool.connect();
 
     let result: T;

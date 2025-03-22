@@ -1,10 +1,14 @@
-import { Job, JobData, ReadOnlyJob } from './job.js';
+import { Job, JobData, JobObserver, ReadOnlyJob } from './job.js';
 import { Pool } from './pool.js';
 import { Poller } from './poller/poller.js';
 import { generateUuid } from './generate-uuid.js';
+import { PoolClient } from 'pg';
+import { Limiter } from './queue/limiter.js';
+import { endOfMinute, startOfMinute } from 'date-fns';
 
 export interface Worker<T extends Record<string, any> = Record<string, any>> {
   process(job: ReadOnlyJob<T>): Promise<any>;
+  getId(): string;
   processNextJob(): Promise<void>;
   startPolling(): void;
   stopPolling(): void;
@@ -14,20 +18,35 @@ export abstract class BaseWorker<
   T extends Record<string, any> = Record<string, any>,
 > implements Worker<T>
 {
+  private workerId: string = `worker-${generateUuid()}`;
+
   // @ts-ignore
   private pool: Pool;
-  // @ts-ignore
-  private workerId: string;
   // @ts-ignore
   private queueId: number;
   // @ts-ignore
   private poller: Poller;
+  // @ts-ignore
+  private limiter: Limiter;
 
-  inject(config: { pool: Pool; queueId: number; poller: Poller }) {
+  /**
+   * Those properties are injected later in the object lifecycle because
+   * the worker itself is created by the user and may contain their own
+   * set of dependencies. We don't want clients to know about these dependencies
+   * as it would hinder our capacity to change them in the future, so while this
+   * pattern is not ideal, it's the best we can do for now.
+   * @param config
+   */
+  inject(config: {
+    pool: Pool;
+    queueId: number;
+    poller: Poller;
+    limiter: Limiter;
+  }) {
     this.pool = config.pool;
     this.queueId = config.queueId;
-    this.workerId = `worker-${generateUuid()}`;
     this.poller = config.poller;
+    this.limiter = config.limiter;
   }
 
   abstract process(job: ReadOnlyJob<T>): Promise<any>;
@@ -78,8 +97,46 @@ export abstract class BaseWorker<
    * @param count
    */
   async acquireNextJobs({ count }: { count: number }): Promise<Job<T>[]> {
-    const result = await this.pool.runInTransaction(async (client) =>
-      client.query(
+    const result = await this.pool.transaction(async (client) => {
+      let jobsToFetch = count;
+
+      if (this.limiter.isLimited()) {
+        const heartBeatDelay = 120;
+        const activeWorkersQuery = await client.query(
+          `SELECT COUNT(*) AS active_workers FROM workers WHERE heartbeat > NOW() - INTERVAL '${heartBeatDelay} seconds'`,
+          [],
+        );
+
+        const activeWorkersCount = parseInt(
+          activeWorkersQuery.rows[0].active_workers,
+          10,
+        );
+
+        const windowStart = startOfMinute(new Date());
+        const windowEnd = endOfMinute(new Date());
+
+        const activeJobsQuery = await client.query(
+          `SELECT COUNT(*) AS processing_jobs FROM jobs WHERE status = 'completed' AND started_at >= $1 AND started_at <= $2`,
+          [windowStart, windowEnd],
+        );
+
+        const activeJobs = parseInt(
+          activeJobsQuery.rows[0].processing_jobs,
+          10,
+        );
+
+        const jobsPerMinute = this.limiter.jobsPerMinute();
+
+        const maxJobsPerMinute = Math.ceil(jobsPerMinute / activeWorkersCount);
+        const jobsRemaining = jobsPerMinute - activeJobs;
+        jobsToFetch = Math.min(maxJobsPerMinute, jobsRemaining);
+
+        if (jobsToFetch === 0) {
+          return [];
+        }
+      }
+
+      const result = await client.query(
         `UPDATE jobs 
          SET status = 'processing', 
              updated_at = NOW(), 
@@ -94,18 +151,25 @@ export abstract class BaseWorker<
            LIMIT $3
          )
          RETURNING *`,
-        [this.workerId, this.queueId, count],
-      ),
-    );
+        [this.workerId, this.queueId, jobsToFetch],
+      );
 
-    return result.rows.map(
+      return result.rows;
+    });
+
+    return result.map(
       (row) =>
         new Job<T>({
           pool: this.pool,
           workerId: this.workerId,
           data: this.sqlToJobData(row),
+          observer: this.createJobObserver(),
         }),
     );
+  }
+
+  getId(): string {
+    return this.workerId;
   }
 
   private sqlToJobData(data: any): JobData<T> {
@@ -123,6 +187,21 @@ export abstract class BaseWorker<
       startedAt: data.started_at ?? null,
       completedAt: data.completed_at ?? null,
       workerId: data.worker_id ?? null,
+    };
+  }
+
+  private async heartbeat(client: PoolClient): Promise<any> {
+    return client.query(
+      `UPDATE workers 
+       SET heartbeat = NOW() 
+       WHERE id = $1`,
+      [this.workerId],
+    );
+  }
+
+  private createJobObserver(): JobObserver {
+    return {
+      onUpdate: (client) => this.heartbeat(client),
     };
   }
 }

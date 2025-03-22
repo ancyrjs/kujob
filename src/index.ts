@@ -7,6 +7,7 @@ import { DefaultMigrator, Migrator } from './migrator/migrator.js';
 import { PoolFactory } from './pool-factory/pool-factory.js';
 import { Poller } from './poller/poller.js';
 import { DefaultPoller } from './poller/default-poller.js';
+import { Limiter } from './queue/limiter.js';
 
 export class Kujob {
   private pool: pg.Pool;
@@ -45,6 +46,7 @@ export class Kujob {
     props?: {
       poller?: Poller;
       logger?: Logger;
+      limiter?: Limiter;
     },
   ) {
     const queue = new Queue({
@@ -52,6 +54,7 @@ export class Kujob {
       queueName,
       logger: props?.logger ?? this.logger,
       poller: props?.poller ?? this.poller,
+      limiter: props?.limiter,
     });
 
     await queue.initialize();
