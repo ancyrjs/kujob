@@ -5,6 +5,9 @@ import { generateUuid } from './generate-uuid.js';
 
 export interface Worker<T extends Record<string, any> = Record<string, any>> {
   process(job: ReadOnlyJob<T>): Promise<any>;
+  processNextJob(): Promise<void>;
+  startPolling(): void;
+  stopPolling(): void;
 }
 
 export abstract class BaseWorker<
