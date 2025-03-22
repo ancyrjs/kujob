@@ -59,7 +59,6 @@ export class Kujob {
 
     await queue.initialize();
     return queue;
-    é;
   }
 
   setLogger(logger: Logger) {
