@@ -1,0 +1,10 @@
+version: '3'
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: kujob
+      POSTGRES_PASSWORD: kujob
+      POSTGRES_DB: default
+    ports:
+      - '6977:5432'
