@@ -31,11 +31,19 @@ export class InMemoryQueue implements Queue {
   }
 
   async addJob(job: JobBuilder): Promise<BuiltJob> {
-    return this.addRawJob(job.raw());
+    const result = await this.addRawJob(job.raw());
+    this.sortQueue();
+
+    return result;
   }
 
   async addJobs(jobs: JobBuilder[]): Promise<BuiltJob[]> {
-    return Promise.all(jobs.map((job) => this.addJob(job)));
+    const results = await Promise.all(
+      jobs.map((job) => this.addRawJob(job.raw())),
+    );
+    this.sortQueue();
+
+    return results;
   }
 
   async addRawJob(raw: RawJob): Promise<BuiltJob> {
@@ -104,5 +112,17 @@ export class InMemoryQueue implements Queue {
 
   getName(): string {
     return this.name;
+  }
+
+  private sortQueue() {
+    this.queue.sort((a, b) => {
+      // Sort first from the highest priority to the least
+      if (a.priority !== b.priority) {
+        return b.priority - a.priority;
+      }
+
+      // Sort from the oldest to the newest
+      return a.createdAt.getTime() - b.createdAt.getTime();
+    });
   }
 }

@@ -1,10 +1,10 @@
 import { Processor } from '../../src/core/processor.js';
-import { Job } from '../../src/core/job.js';
+import { BaseJobData, Job } from '../../src/core/job.js';
 
-export class SpyProcessor implements Processor {
-  private jobs: any[] = [];
+export class SpyProcessor<T extends BaseJobData = any> implements Processor {
+  private jobs: T[] = [];
 
-  async process(job: Job<any>): Promise<void> {
+  async process(job: Job<T>): Promise<void> {
     this.jobs.push(job.getData());
   }
 
