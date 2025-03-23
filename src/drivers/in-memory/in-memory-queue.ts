@@ -11,6 +11,7 @@ import { CreateQueueParams } from '../../core/driver.js';
 import { JobBuilder } from '../../core/job-builder.js';
 import { InMemoryJobState } from './in-memory-job-state.js';
 import { InMemoryJob } from './in-memory-job.js';
+import { Looper } from '../../utils/looper.js';
 
 const randomId = () => randomUUID();
 
@@ -18,9 +19,17 @@ export class InMemoryQueue implements Queue {
   private name: string;
   private queue: InMemoryJobState[] = [];
   private processor: Processor | null = null;
+  private looper: Looper;
 
-  constructor(props: CreateQueueParams) {
-    this.name = props.name;
+  constructor(props: { params: CreateQueueParams; looper: Looper }) {
+    this.name = props.params.name;
+    this.looper = props.looper;
+
+    this.looper.configure(() => this.runProcessing());
+  }
+
+  getName(): string {
+    return this.name;
   }
 
   createJob<T extends BaseJobData>(data: T): JobBuilder {
@@ -81,6 +90,14 @@ export class InMemoryQueue implements Queue {
   }
 
   startProcessing(): void {
+    this.looper.start();
+  }
+
+  stopProcessing(): void {
+    this.looper.stop();
+  }
+
+  private async runProcessing() {
     if (!this.processor) {
       throw new Error('Processor is not set');
     }
@@ -88,30 +105,28 @@ export class InMemoryQueue implements Queue {
     // Prevent the processor from being erased by the time it is called
     const processor = this.processor;
 
-    this.queue
-      .filter((job) => job.status === 'waiting')
-      .forEach(async (state) => {
-        state.status = 'processing';
-        state.startedAt = new Date();
-        const acquiredJob = new InMemoryJob({ state });
+    // Get all jobs that are waiting to be processed
+    const jobsToProcess = this.queue.filter((job) => job.status === 'waiting');
 
-        setImmediate(async () => {
-          try {
-            await processor.process(acquiredJob);
-            await acquiredJob.complete();
-          } catch (e) {
-            await acquiredJob.fail(e);
-          }
-        });
+    // Process jobs
+    for (const state of jobsToProcess) {
+      state.status = 'processing';
+      state.startedAt = new Date();
+      const acquiredJob = new InMemoryJob({ state });
+
+      // We need to schedule all the jobs before starting to run any of them.
+      // We use setImmediate so that jobs run one after the other after all the
+      // waiting jobs have been scheduled.
+
+      setImmediate(async () => {
+        try {
+          await processor.process(acquiredJob);
+          await acquiredJob.complete();
+        } catch (e) {
+          await acquiredJob.fail(e);
+        }
       });
-  }
-
-  stopProcessing(): void {
-    // Do nothing
-  }
-
-  getName(): string {
-    return this.name;
+    }
   }
 
   private sortQueue() {
