@@ -17,6 +17,6 @@ export class InMemoryTester extends BaseTester {
   }
 
   name(): string {
-    return 'InMemoryTester';
+    return 'in-memory';
   }
 }
