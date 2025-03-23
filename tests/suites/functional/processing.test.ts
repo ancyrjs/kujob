@@ -1,7 +1,6 @@
 import { getTestedDrivers } from '../../config/tested-drivers.js';
 import { SpyProcessor } from '../../adapters/spy-processor.js';
 import { FailingProcessor } from '../../adapters/failing-processor.js';
-import { waitFor } from '../../config/wait-for.js';
 
 describe.each(getTestedDrivers())('%s', (tester) => {
   beforeAll(() => tester.beforeAll());
@@ -84,14 +83,11 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
       const processor = new SpyProcessor();
       queue.setProcessor(processor);
-
       queue.startProcessing();
 
       await queue.addJob(queue.createJob({ value: 1 }));
 
-      await waitFor(100);
-
-      expect(processor.getJobs()).toHaveLength(1);
+      await expect.poll(() => processor.getJobs()).toHaveLength(1);
     });
   });
 });
