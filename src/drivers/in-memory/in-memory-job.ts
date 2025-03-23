@@ -54,6 +54,21 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
   }
 
   async fail(reason: any): Promise<void> {
+    if (this.state.attempts > 1) {
+      this.reschedule();
+      return;
+    }
+
+    this.definitelyFail(reason);
+  }
+
+  private reschedule(): void {
+    this.state.attempts--;
+    this.state.status = 'waiting';
+    return;
+  }
+
+  private definitelyFail(reason: any) {
     this.state.status = 'failed';
     this.state.finishedAt = new Date();
     this.state.failureReason =

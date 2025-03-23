@@ -8,56 +8,57 @@ describe.each(getTestedDrivers())('%s', (tester) => {
   afterAll(() => tester.afterAll());
   afterEach(() => tester.afterEach());
 
-  const createJob = async ({ id }: { id: string }) => {
+  const createJob = async () => {
     const queue = tester.getKujob().createQueue({ name: 'myqueue' });
     const job = queue.createJob({ value: 1 });
-    await job.id(id).save();
+    const { id } = await job.save();
 
     return {
       queue,
       data: { value: 1 },
+      id,
     };
   };
 
   describe('lifecycle', () => {
     test('job starts in the waiting state', async () => {
-      const { queue } = await createJob({ id: 'job' });
+      const { queue, id } = await createJob();
 
-      const savedJob = (await queue.readJob('job'))!;
+      const savedJob = (await queue.readJob(id))!;
       expect(savedJob.isWaiting()).toBe(true);
     });
 
     test('when the job starts being processed, it enters the processing state', async () => {
-      const { queue } = await createJob({ id: 'job' });
+      const { queue, id } = await createJob();
 
       queue.setProcessor(new SpyProcessor());
 
       // Don't wait
       tester.processJobs(queue);
 
-      const savedJob = (await queue.readJob('job'))!;
+      const savedJob = (await queue.readJob(id))!;
       expect(savedJob.isProcessing()).toBe(true);
     });
 
     test('completing a job', async () => {
-      const { queue } = await createJob({ id: 'job' });
+      const { queue, id } = await createJob();
 
       queue.setProcessor(new SpyProcessor());
 
       await tester.processJobs(queue);
 
-      const savedJob = (await queue.readJob('job'))!;
+      const savedJob = (await queue.readJob(id))!;
       expect(savedJob.isCompleted()).toBe(true);
     });
 
     test('failing a job', async () => {
-      const { queue } = await createJob({ id: 'job' });
+      const { queue, id } = await createJob();
 
       queue.setProcessor(new FailingProcessor());
 
       await tester.processJobs(queue);
 
-      const savedJob = (await queue.readJob('job'))!;
+      const savedJob = (await queue.readJob(id))!;
       expect(savedJob.isFailed()).toBe(true);
       expect(savedJob.getFailureReason()).toBe(FailingProcessor.REASON);
     });
@@ -65,7 +66,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
   describe('mechanics', () => {
     test('invoking the processor with the jobs data', async () => {
-      const { queue, data } = await createJob({ id: 'job' });
+      const { queue, data } = await createJob();
 
       const processor = new SpyProcessor();
       queue.setProcessor(processor);
