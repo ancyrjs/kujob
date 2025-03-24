@@ -1,4 +1,4 @@
-import { NextRunAtParams, Schedule } from './schedule.js';
+import { RunAtParams, Schedule } from './schedule.js';
 import { isObj } from '../../utils/validation.js';
 
 type Serialized = {
@@ -29,11 +29,13 @@ export class Asap implements Schedule {
     };
   }
 
-  shouldReschedule(): boolean {
-    return false;
-  }
-
-  nextRunAt(params: NextRunAtParams): Date {
+  firstRunAt(params: RunAtParams): Date {
     return params.now;
   }
+
+  nextRunAt(params: RunAtParams): Date | null {
+    return null;
+  }
+
+  scheduledForNextRun() {}
 }

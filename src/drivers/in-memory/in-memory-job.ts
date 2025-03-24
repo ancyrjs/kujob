@@ -21,7 +21,7 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
         id: spec.id ?? randomUuid(),
         status: 'waiting',
         createdAt: now,
-        scheduledAt: spec.schedule.nextRunAt({ now }),
+        scheduledAt: spec.schedule.firstRunAt({ now }),
         startedAt: null,
         updatedAt: null,
         finishedAt: null,
@@ -97,15 +97,15 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
   }
 
   async complete(): Promise<void> {
-    if (this.state.schedule.shouldReschedule()) {
-      // <ancyrweb>
-      // Should reschedule lead to creating a new job,
-      // or should it just update the current job?
+    const nextRunAt = this.state.schedule.nextRunAt({
+      now: this.dateProvider.getDate(),
+    });
+
+    if (nextRunAt) {
+      this.state.schedule.scheduledForNextRun();
 
       this.state.status = 'waiting';
-      this.state.scheduledAt = this.state.schedule.nextRunAt({
-        now: this.dateProvider.getDate(),
-      });
+      this.state.scheduledAt = nextRunAt;
     } else {
       this.state.status = 'completed';
       this.state.finishedAt = this.dateProvider.getDate();

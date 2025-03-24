@@ -1,4 +1,4 @@
-import { NextRunAtParams, Schedule } from './schedule.js';
+import { RunAtParams, Schedule } from './schedule.js';
 import { Duration } from '../../utils/duration.js';
 import { isObj } from '../../utils/validation.js';
 
@@ -37,11 +37,17 @@ export class Delay implements Schedule {
     };
   }
 
-  shouldReschedule(): boolean {
-    return this.repeat;
-  }
-
-  nextRunAt(params: NextRunAtParams): Date {
+  firstRunAt(params: RunAtParams): Date {
     return this.duration.addToDate(params.now);
   }
+
+  nextRunAt(params: RunAtParams): Date | null {
+    if (this.repeat === false) {
+      return null;
+    }
+
+    return this.duration.addToDate(params.now);
+  }
+
+  scheduledForNextRun(): void {}
 }

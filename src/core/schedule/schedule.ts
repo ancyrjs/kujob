@@ -1,4 +1,4 @@
-export type NextRunAtParams = {
+export type RunAtParams = {
   now: Date;
 };
 
@@ -14,14 +14,20 @@ export interface Schedule {
   serialize(): object;
 
   /**
-   * Determines if the job should be rescheduled.
-   * Used for repeatable jobs
-   */
-  shouldReschedule(): boolean;
-
-  /**
-   * Determines when to run the job next
+   * Determines when to run the job first
    * @param params
    */
-  nextRunAt(params: NextRunAtParams): Date;
+  firstRunAt(params: RunAtParams): Date;
+
+  /**
+   * Determines when to run the job after its completion
+   * @param params
+   */
+  nextRunAt(params: RunAtParams): Date | null;
+
+  /**
+   * Notify the schedule that the job has been scheduled
+   * Useful for limiting the number of runs
+   */
+  scheduledForNextRun(): void;
 }
