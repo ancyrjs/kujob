@@ -1,32 +1,42 @@
 import { BaseJobData, Job, JobSpec } from '../../core/job.js';
 import { InMemoryJobState } from './in-memory-job-state.js';
-import { randomUUID } from 'crypto';
-
-const randomId = () => randomUUID();
+import { DateProvider } from '../../core/date/date-provider.js';
+import { randomUuid } from '../../utils/random-uuid.js';
 
 export class InMemoryJob<T extends BaseJobData> implements Job<T> {
   private state: InMemoryJobState<T>;
+  private dateProvider: DateProvider;
 
-  static fromSpec(spec: JobSpec) {
-    const now = new Date();
+  static fromSpec(
+    spec: JobSpec,
+    props: {
+      dateProvider: DateProvider;
+    },
+  ) {
+    const now = props.dateProvider.getDate();
 
-    const state: InMemoryJobState = {
-      ...spec,
-      id: spec.id ?? randomId(),
-      status: 'waiting',
-      createdAt: now,
-      scheduledAt: spec.schedule.nextRunAt({ now }),
-      startedAt: null,
-      updatedAt: null,
-      finishedAt: null,
-      failureReason: null,
-    };
-
-    return new InMemoryJob({ state });
+    return new InMemoryJob({
+      state: {
+        ...spec,
+        id: spec.id ?? randomUuid(),
+        status: 'waiting',
+        createdAt: now,
+        scheduledAt: spec.schedule.nextRunAt({ now }),
+        startedAt: null,
+        updatedAt: null,
+        finishedAt: null,
+        failureReason: null,
+      },
+      dateProvider: props.dateProvider,
+    });
   }
 
-  constructor(props: { state: InMemoryJobState<T> }) {
+  constructor(props: {
+    state: InMemoryJobState<T>;
+    dateProvider: DateProvider;
+  }) {
     this.state = props.state;
+    this.dateProvider = props.dateProvider;
   }
 
   getData(): T {
@@ -81,18 +91,24 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
     return this.state;
   }
 
+  acquire() {
+    this.state.status = 'processing';
+    this.state.startedAt = this.dateProvider.getDate();
+  }
+
   async complete(): Promise<void> {
     if (this.state.schedule.shouldReschedule()) {
+      // <ancyrweb>
       // Should reschedule lead to creating a new job,
       // or should it just update the current job?
 
       this.state.status = 'waiting';
       this.state.scheduledAt = this.state.schedule.nextRunAt({
-        now: new Date(),
+        now: this.dateProvider.getDate(),
       });
     } else {
       this.state.status = 'completed';
-      this.state.finishedAt = new Date();
+      this.state.finishedAt = this.dateProvider.getDate();
     }
   }
 
@@ -113,7 +129,7 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
 
   private definitelyFail(reason: any) {
     this.state.status = 'failed';
-    this.state.finishedAt = new Date();
+    this.state.finishedAt = this.dateProvider.getDate();
     this.state.failureReason =
       reason instanceof Error ? reason.message : 'unknown';
   }

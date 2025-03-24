@@ -1,11 +1,4 @@
-export interface Looper {
-  configure(runnable: Runnable): void;
-  start(): Promise<void>;
-  stop(): Promise<void>;
-  clone(): Looper;
-}
-
-type Runnable = () => Promise<void>;
+import { Looper, Runnable } from './looper.js';
 
 export class DefaultLooper implements Looper {
   private timeoutHandle: NodeJS.Timeout | null = null;

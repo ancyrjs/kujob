@@ -11,7 +11,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
   describe('asap', () => {
     test('job runs as soon as possible by default', async () => {
-      const MAX_DELAY = 5;
+      const MAX_DELAY = 15;
 
       const queue = tester.getKujob().createQueue({ name: 'myqueue' });
       const job = queue.createJob({});

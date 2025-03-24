@@ -7,20 +7,27 @@ import {
 } from '../../core/job.js';
 import { Processor } from '../../core/processor.js';
 import { CreateQueueParams } from '../../core/driver.js';
-import { JobBuilder } from '../../core/job-builder.js';
 import { InMemoryJobState } from './in-memory-job-state.js';
+import { Looper } from '../../core/looper/looper.js';
+import { DateProvider } from '../../core/date/date-provider.js';
+import { JobBuilder } from '../../core/job-builder.js';
 import { InMemoryJob } from './in-memory-job.js';
-import { Looper } from '../../utils/looper.js';
 
 export class InMemoryQueue implements Queue {
   private name: string;
   private queue: InMemoryJobState[] = [];
   private processor: Processor | null = null;
   private looper: Looper;
+  private dateProvider: DateProvider;
 
-  constructor(props: { params: CreateQueueParams; looper: Looper }) {
+  constructor(props: {
+    params: CreateQueueParams;
+    looper: Looper;
+    dateProvider: DateProvider;
+  }) {
     this.name = props.params.name;
     this.looper = props.looper;
+    this.dateProvider = props.dateProvider;
 
     this.looper.configure(() => this.runProcessing());
   }
@@ -53,7 +60,9 @@ export class InMemoryQueue implements Queue {
   }
 
   async addJobSpec(spec: JobSpec): Promise<BuiltJob> {
-    const job = InMemoryJob.fromSpec(spec);
+    const job = InMemoryJob.fromSpec(spec, {
+      dateProvider: this.dateProvider,
+    });
 
     this.queue.push(job.getState());
 
@@ -70,7 +79,10 @@ export class InMemoryQueue implements Queue {
       return null;
     }
 
-    return new InMemoryJob({ state: entry as InMemoryJobState<T> });
+    return new InMemoryJob({
+      state: entry as InMemoryJobState<T>,
+      dateProvider: this.dateProvider,
+    });
   }
 
   setProcessor(processor: Processor): void {
@@ -96,13 +108,19 @@ export class InMemoryQueue implements Queue {
     // Get all jobs that are waiting to be processed
     const jobsToProcess = this.queue
       .filter((job) => job.status === 'waiting')
-      .filter((job) => job.scheduledAt.getTime() <= new Date().getTime());
+      .filter(
+        (job) =>
+          job.scheduledAt.getTime() <= this.dateProvider.getDate().getTime(),
+      );
 
     // Process jobs
     for (const state of jobsToProcess) {
-      state.status = 'processing';
-      state.startedAt = new Date();
-      const acquiredJob = new InMemoryJob({ state });
+      const acquiredJob = new InMemoryJob({
+        state,
+        dateProvider: this.dateProvider,
+      });
+
+      acquiredJob.acquire();
 
       // We need to schedule all the jobs before starting to run any of them.
       // We use setImmediate so that jobs run one after the other after all the
