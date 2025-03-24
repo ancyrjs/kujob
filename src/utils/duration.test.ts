@@ -1,4 +1,4 @@
-import { Duration } from '../../../../src/utils/duration.js';
+import { Duration } from './duration.js';
 
 test('defaults to milliseconds', () => {
   expect(new Duration(60).toMilliseconds()).toBe(60);
