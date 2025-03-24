@@ -1,4 +1,4 @@
-import { BaseJobData, BuiltJob, NonAcquiredJob, RawJob } from './job.js';
+import { BaseJobData, BuiltJob, JobSpec, NonAcquiredJob } from './job.js';
 import { Processor } from './processor.js';
 import { JobBuilder } from './job-builder.js';
 
@@ -9,7 +9,7 @@ export interface Queue {
 
   addJobs(jobs: JobBuilder[]): Promise<BuiltJob[]>;
 
-  addRawJob(job: RawJob): Promise<BuiltJob>;
+  addJobSpec(job: JobSpec): Promise<BuiltJob>;
 
   setProcessor(processor: Processor<any>): void;
 

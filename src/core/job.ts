@@ -1,3 +1,5 @@
+import { Duration } from '../utils/duration.js';
+
 export type BaseJobData = Record<string, any>;
 
 export type JobStatus = 'waiting' | 'processing' | 'completed' | 'failed';
@@ -17,7 +19,9 @@ export interface NonAcquiredJob<T extends BaseJobData = BaseJobData> {
   isCompleted(): boolean;
   isFailed(): boolean;
   getFailureReason(): string | null;
+  createdAt(): Date;
   startedAt(): Date | null;
+  scheduledAt(): Date | null;
   finishedAt(): Date | null;
   updatedAt(): Date | null;
 }
@@ -42,11 +46,10 @@ export type BuiltJob = {
 /**
  * Job's data in raw form
  */
-export type RawJob<T extends BaseJobData = BaseJobData> = {
+export type JobSpec<T extends BaseJobData = BaseJobData> = {
   id: string | null;
   data: T;
   attempts: number;
-  delay: number;
-  notBefore: Date | null;
+  delay: Duration;
   priority: number;
 };

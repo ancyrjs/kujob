@@ -1,10 +1,9 @@
-import { randomUUID } from 'crypto';
 import { Queue } from '../../core/queue.js';
 import {
   BaseJobData,
   BuiltJob,
+  JobSpec,
   NonAcquiredJob,
-  RawJob,
 } from '../../core/job.js';
 import { Processor } from '../../core/processor.js';
 import { CreateQueueParams } from '../../core/driver.js';
@@ -12,8 +11,6 @@ import { JobBuilder } from '../../core/job-builder.js';
 import { InMemoryJobState } from './in-memory-job-state.js';
 import { InMemoryJob } from './in-memory-job.js';
 import { Looper } from '../../utils/looper.js';
-
-const randomId = () => randomUUID();
 
 export class InMemoryQueue implements Queue {
   private name: string;
@@ -40,7 +37,7 @@ export class InMemoryQueue implements Queue {
   }
 
   async addJob(job: JobBuilder): Promise<BuiltJob> {
-    const result = await this.addRawJob(job.raw());
+    const result = await this.addJobSpec(job.build());
     this.sortQueue();
 
     return result;
@@ -48,29 +45,20 @@ export class InMemoryQueue implements Queue {
 
   async addJobs(jobs: JobBuilder[]): Promise<BuiltJob[]> {
     const results = await Promise.all(
-      jobs.map((job) => this.addRawJob(job.raw())),
+      jobs.map((job) => this.addJobSpec(job.build())),
     );
     this.sortQueue();
 
     return results;
   }
 
-  async addRawJob(raw: RawJob): Promise<BuiltJob> {
-    const job: InMemoryJobState = {
-      ...raw,
-      id: raw.id ?? randomId(),
-      status: 'waiting',
-      createdAt: new Date(),
-      startedAt: null,
-      updatedAt: null,
-      finishedAt: null,
-      failureReason: null,
-    };
+  async addJobSpec(spec: JobSpec): Promise<BuiltJob> {
+    const job = InMemoryJob.fromSpec(spec);
 
-    this.queue.push(job);
+    this.queue.push(job.getState());
 
     return {
-      id: job.id,
+      id: job.getId(),
     };
   }
 
@@ -106,7 +94,9 @@ export class InMemoryQueue implements Queue {
     const processor = this.processor;
 
     // Get all jobs that are waiting to be processed
-    const jobsToProcess = this.queue.filter((job) => job.status === 'waiting');
+    const jobsToProcess = this.queue
+      .filter((job) => job.status === 'waiting')
+      .filter((job) => job.scheduledAt.getTime() <= new Date().getTime());
 
     // Process jobs
     for (const state of jobsToProcess) {

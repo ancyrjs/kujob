@@ -1,9 +1,29 @@
-import { BaseJobData, Job } from '../../core/job.js';
+import { BaseJobData, Job, JobSpec } from '../../core/job.js';
 import { InMemoryJobState } from './in-memory-job-state.js';
+import { randomUUID } from 'crypto';
+
+const randomId = () => randomUUID();
 
 export class InMemoryJob<T extends BaseJobData> implements Job<T> {
   private state: InMemoryJobState<T>;
 
+  static fromSpec(spec: JobSpec) {
+    const now = new Date();
+
+    const state: InMemoryJobState = {
+      ...spec,
+      id: spec.id ?? randomId(),
+      status: 'waiting',
+      createdAt: now,
+      scheduledAt: spec.delay.addToDate(now),
+      startedAt: null,
+      updatedAt: null,
+      finishedAt: null,
+      failureReason: null,
+    };
+
+    return new InMemoryJob({ state });
+  }
   constructor(props: { state: InMemoryJobState<T> }) {
     this.state = props.state;
   }
@@ -32,6 +52,14 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
     return this.state.status === 'failed';
   }
 
+  createdAt(): Date {
+    return this.state.createdAt;
+  }
+
+  scheduledAt(): Date {
+    return this.state.scheduledAt;
+  }
+
   startedAt(): Date | null {
     return this.state.startedAt;
   }
@@ -46,6 +74,10 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
 
   getFailureReason(): string | null {
     return this.state.failureReason;
+  }
+
+  getState() {
+    return this.state;
   }
 
   async complete(): Promise<void> {
