@@ -15,7 +15,7 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
       id: spec.id ?? randomId(),
       status: 'waiting',
       createdAt: now,
-      scheduledAt: spec.delay.addToDate(now),
+      scheduledAt: spec.schedule.nextRunAt({ now }),
       startedAt: null,
       updatedAt: null,
       finishedAt: null,
@@ -24,6 +24,7 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
 
     return new InMemoryJob({ state });
   }
+
   constructor(props: { state: InMemoryJobState<T> }) {
     this.state = props.state;
   }
@@ -81,8 +82,18 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
   }
 
   async complete(): Promise<void> {
-    this.state.status = 'completed';
-    this.state.finishedAt = new Date();
+    if (this.state.schedule.shouldReschedule()) {
+      // Should reschedule lead to creating a new job,
+      // or should it just update the current job?
+
+      this.state.status = 'waiting';
+      this.state.scheduledAt = this.state.schedule.nextRunAt({
+        now: new Date(),
+      });
+    } else {
+      this.state.status = 'completed';
+      this.state.finishedAt = new Date();
+    }
   }
 
   async fail(reason: any): Promise<void> {

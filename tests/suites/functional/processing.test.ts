@@ -73,8 +73,8 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
       await tester.processJobs(queue);
 
-      expect(processor.getJobs()).toHaveLength(1);
-      expect(processor.getJobAt(0)).toEqual(data);
+      expect(processor.getJobsData()).toHaveLength(1);
+      expect(processor.getJobDataAt(0)).toEqual(data);
     });
   });
 
@@ -88,7 +88,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
       await queue.addJob(queue.createJob({ value: 1 }));
 
-      await expect.poll(() => processor.getJobs()).toHaveLength(1);
+      await expect.poll(() => processor.getJobsData()).toHaveLength(1);
     });
   });
 });

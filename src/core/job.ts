@@ -1,4 +1,4 @@
-import { Duration } from '../utils/duration.js';
+import { Schedule } from './schedule/schedule.js';
 
 export type BaseJobData = Record<string, any>;
 
@@ -50,6 +50,6 @@ export type JobSpec<T extends BaseJobData = BaseJobData> = {
   id: string | null;
   data: T;
   attempts: number;
-  delay: Duration;
+  schedule: Schedule;
   priority: number;
 };

@@ -1,22 +1,29 @@
 import { Processor } from '../../src/core/processor.js';
 import { BaseJobData, Job } from '../../src/core/job.js';
 
+type JobInfo<T extends BaseJobData> = {
+  data: T;
+  at: Date;
+};
 export class SpyProcessor<T extends BaseJobData = any> implements Processor {
-  private jobs: T[] = [];
+  private jobs: JobInfo<T>[] = [];
 
   async process(job: Job<T>): Promise<void> {
-    this.jobs.push(job.getData());
+    this.jobs.push({
+      data: job.getData(),
+      at: new Date(),
+    });
   }
 
   getConcurrency(): number {
     return 1;
   }
 
-  getJobs() {
-    return this.jobs;
+  getJobsData() {
+    return this.jobs.map((job) => job.data);
   }
 
-  getJobAt(index: number) {
-    return this.jobs[index];
+  getJobDataAt(index: number) {
+    return this.jobs[index].data;
   }
 }

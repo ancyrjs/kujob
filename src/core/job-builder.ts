@@ -1,6 +1,7 @@
 import { BaseJobData, BuiltJob, JobSpec } from './job.js';
 import { Queue } from './queue.js';
-import { Duration } from '../utils/duration.js';
+import { Schedule } from './schedule/schedule.js';
+import { Asap } from './schedule/asap.js';
 
 export class JobBuilder<T extends BaseJobData = BaseJobData> {
   private state: JobSpec<T>;
@@ -11,7 +12,7 @@ export class JobBuilder<T extends BaseJobData = BaseJobData> {
       id: null,
       data: props.data,
       attempts: 1,
-      delay: Duration.IMMEDIATE,
+      schedule: Asap.INSTANCE,
       priority: 0,
     };
 
@@ -23,8 +24,8 @@ export class JobBuilder<T extends BaseJobData = BaseJobData> {
     return this;
   }
 
-  delay(value: Duration): this {
-    this.state.delay = value;
+  schedule(schedule: Schedule): this {
+    this.state.schedule = schedule;
     return this;
   }
 

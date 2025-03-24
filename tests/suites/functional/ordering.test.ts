@@ -20,8 +20,8 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
     await tester.processJobs(queue);
 
-    expect(processor.getJobs()).toHaveLength(3);
-    expect(processor.getJobs()).toEqual([
+    expect(processor.getJobsData()).toHaveLength(3);
+    expect(processor.getJobsData()).toEqual([
       { position: 1 },
       { position: 2 },
       { position: 3 },
@@ -41,8 +41,8 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
     await tester.processJobs(queue);
 
-    expect(processor.getJobs()).toHaveLength(3);
-    expect(processor.getJobs()).toEqual([
+    expect(processor.getJobsData()).toHaveLength(3);
+    expect(processor.getJobsData()).toEqual([
       { position: 3 },
       { position: 2 },
       { position: 1 },
@@ -62,8 +62,8 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
     await tester.processJobs(queue);
 
-    expect(processor.getJobs()).toHaveLength(3);
-    expect(processor.getJobs()).toEqual([
+    expect(processor.getJobsData()).toHaveLength(3);
+    expect(processor.getJobsData()).toEqual([
       { position: 2 },
       { position: 3 },
       { position: 1 },
