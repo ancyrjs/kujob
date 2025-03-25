@@ -25,7 +25,8 @@ test.each([
   },
 ])('$pattern', ({ pattern, expected }) => {
   const cron = new Cron({
-    expression: pattern,
+    pattern,
+    timezone: 'utc',
   });
 
   expect(

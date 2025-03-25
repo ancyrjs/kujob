@@ -1,14 +1,19 @@
+import { CronExpressionParser } from 'cron-parser';
 import { RunAtParams, Schedule } from './schedule.js';
 import { isObj } from '../../utils/validation.js';
-import { CronExpressionParser } from 'cron-parser';
 
 type Serialized = {
   type: 'cron';
-  expression: string;
+  pattern: string;
+  timezone: string | null;
 };
 
+/**
+ * Runs a job according to a cron expression.
+ */
 export class Cron implements Schedule {
-  private expression: string;
+  private pattern: string;
+  private timezone: string | null = null;
 
   static deserializable(data: object): data is Serialized {
     return isObj(data) && 'type' in data && data['type'] === 'cron';
@@ -16,18 +21,21 @@ export class Cron implements Schedule {
 
   static deserialize(data: Serialized) {
     return new Cron({
-      expression: data.expression,
+      pattern: data.pattern,
+      timezone: data.timezone,
     });
   }
 
-  constructor(props: { expression: string }) {
-    this.expression = props.expression;
+  constructor(props: { pattern: string; timezone?: string | null }) {
+    this.pattern = props.pattern;
+    this.timezone = props.timezone ?? null;
   }
 
   serialize(): object {
     return {
       type: 'cron',
-      expression: this.expression,
+      expression: this.pattern,
+      timezone: this.timezone,
     };
   }
 
@@ -41,10 +49,15 @@ export class Cron implements Schedule {
 
   scheduledForNextRun(): void {}
 
+  /**
+   * Calculate the next run date.
+   * @param params
+   * @private
+   */
   private nextRunAtDate(params: RunAtParams): Date {
-    const interval = CronExpressionParser.parse(this.expression, {
+    const interval = CronExpressionParser.parse(this.pattern, {
       currentDate: params.now,
-      tz: 'utc',
+      tz: this.timezone ?? undefined,
     });
 
     return new Date(interval.next().toISOString()!);
