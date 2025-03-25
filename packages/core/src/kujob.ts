@@ -1,5 +1,5 @@
-import { CreateQueueParams, Driver } from './core/driver.js';
-import { Queue } from './core/queue.js';
+import { CreateQueueParams, Driver } from './driver.js';
+import { Queue } from './queue.js';
 
 export class Kujob {
   private driver: Driver;

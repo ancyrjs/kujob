@@ -1,4 +1,4 @@
-import { isObj } from '../../utils/validation.js';
+import { isObj } from '../utils/validation.js';
 import { BackoffStrategy, ScheduleForParams } from './backoff-strategy.js';
 
 type Serialized = {

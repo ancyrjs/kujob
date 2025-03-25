@@ -1,4 +1,4 @@
-import { Duration } from '../../utils/duration.js';
+import { Duration } from '../utils/duration.js';
 import { ExponentialBackoff } from './exponential-backoff.js';
 
 test.each([

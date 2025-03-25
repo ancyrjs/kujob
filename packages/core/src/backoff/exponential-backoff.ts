@@ -1,7 +1,7 @@
 import { addMilliseconds } from 'date-fns';
-import { isObj } from '../../utils/validation.js';
+import { isObj } from '../utils/validation.js';
 import { BackoffStrategy, ScheduleForParams } from './backoff-strategy.js';
-import { Duration } from '../../utils/duration.js';
+import { Duration } from '../utils/duration.js';
 
 type Serialized = {
   type: 'exponential';

@@ -1,5 +1,5 @@
 import { RunAtParams, ScheduleStrategy } from './schedule-strategy.js';
-import { isObj } from '../../utils/validation.js';
+import { isObj } from '../utils/validation.js';
 
 type Serialized = {
   type: 'asap';

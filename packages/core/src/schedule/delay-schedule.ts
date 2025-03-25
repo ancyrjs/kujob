@@ -1,6 +1,6 @@
 import { RunAtParams, ScheduleStrategy } from './schedule-strategy.js';
-import { Duration } from '../../utils/duration.js';
-import { isObj } from '../../utils/validation.js';
+import { Duration } from '../utils/duration.js';
+import { isObj } from '../utils/validation.js';
 
 type Serialized = {
   type: 'delay';

@@ -5,8 +5,8 @@ import {
   Queue,
 } from '@ancyrjs/kujob-core';
 import { expectDate, FailingProcessor } from '@ancyrjs/kujob-testing';
-import { getTestedDrivers } from '../../config/tested-drivers.js';
-import { Tester } from '../../config/tester.js';
+import { getTestedDrivers } from './config/tested-drivers.js';
+import { Tester } from './config/tester.js';
 
 describe.each(getTestedDrivers())('%s', (tester) => {
   beforeAll(() => tester.beforeAll());

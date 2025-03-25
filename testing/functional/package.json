@@ -1,5 +1,5 @@
 {
-  "name": "@ancyrjs/kujob-in-memory",
+  "name": "@ancyrjs/kujob-testing-functional",
   "version": "0.0.1",
   "description": "",
   "keywords": [],
@@ -8,21 +8,16 @@
   "main": "build/index.js",
   "type": "module",
   "scripts": {
-    "build": "rimraf build && tsc",
-    "test": "vitest run --pass-with-no-tests",
-    "coverage": "vitest run --coverage"
-  },
-  "dependencies": {
-    "@ancyrjs/kujob-core": "workspace:*"
+    "test": "vitest run"
   },
   "devDependencies": {
+    "@ancyrjs/kujob-core": "workspace:*",
+    "@ancyrjs/kujob-in-memory": "workspace:*",
     "@ancyrjs/kujob-testing": "workspace:*",
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.11.9",
     "@types/node": "^22.13.1",
-    "@vitest/coverage-v8": "^3.0.9",
     "prettier": "^3.5.3",
-    "rimraf": "^6.0.1",
     "typescript": "^5.8.2",
     "unplugin-swc": "^1.5.1",
     "vitest": "^3.0.9",

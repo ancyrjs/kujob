@@ -1,6 +1,6 @@
 import { Kujob } from '@ancyrjs/kujob-core';
+import { InMemoryDriver } from '@ancyrjs/kujob-in-memory';
 import { BaseTester } from './tester.js';
-import { InMemoryDriver } from '../../src/in-memory-driver.js';
 
 export class InMemoryTester extends BaseTester {
   // @ts-ignore
