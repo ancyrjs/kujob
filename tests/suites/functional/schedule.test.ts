@@ -2,6 +2,9 @@ import { getTestedDrivers } from '../../config/tested-drivers.js';
 import { SpyProcessor } from '../../adapters/spy-processor.js';
 import { Duration } from '../../../src/utils/duration.js';
 import { Delay } from '../../../src/core/schedule/delay.js';
+import { Schedule } from '../../../src/core/schedule/schedule.js';
+import { Queue } from '../../../src/core/queue.js';
+import { Tester } from '../../config/tester.js';
 
 describe.each(getTestedDrivers())('%s', (tester) => {
   beforeAll(() => tester.beforeAll());
@@ -11,73 +14,84 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
   describe('asap', () => {
     test('job runs as soon as possible by default', async () => {
-      const MAX_DELAY = 15;
-
-      const queue = tester.getKujob().createQueue({ name: 'myqueue' });
-      const job = queue.createJob({});
-
-      const { id } = await job.save();
-
-      const processor = new SpyProcessor<{ position: number }>();
-      queue.setProcessor(processor);
-      queue.startProcessing();
-
-      await expect.poll(() => processor.getJobsData()).toHaveLength(1);
-
-      const savedJob = (await queue.readJob(id))!;
-
-      const distance =
-        savedJob.finishedAt()!.getTime() - savedJob.createdAt()!.getTime();
-      expect(distance).toBeLessThanOrEqual(MAX_DELAY);
+      const driver = new TestDriver(tester);
+      await driver.setup({ schedule: null });
+      await driver.waitUntilJobIsProcessed();
+      await driver.expectJobToHaveRunWithin(15);
     });
   });
 
   describe('delay', () => {
     test('job is not run before a delay', async () => {
-      const DELAY_IN_MS = 30;
-
-      const queue = tester.getKujob().createQueue({ name: 'myqueue' });
-      const job = queue.createJob({}).schedule(
-        new Delay({
-          duration: Duration.milliseconds(DELAY_IN_MS),
+      const driver = new TestDriver(tester);
+      await driver.setup({
+        schedule: new Delay({
+          duration: Duration.milliseconds(30),
         }),
-      );
-
-      const { id } = await job.save();
-
-      const processor = new SpyProcessor<{ position: number }>();
-      queue.setProcessor(processor);
-      queue.startProcessing();
-
-      await expect.poll(() => processor.getJobsData()).toHaveLength(1);
-
-      const savedJob = (await queue.readJob(id))!;
-
-      const distance =
-        savedJob.finishedAt()!.getTime() - savedJob.createdAt()!.getTime();
-      expect(distance).toBeGreaterThanOrEqual(DELAY_IN_MS);
+      });
+      await driver.waitUntilJobIsProcessed();
+      await driver.expectJobToHaveRunAfter(30);
     });
 
     test('repeat after delay', async () => {
-      const DELAY_IN_MS = 15;
-
-      const queue = tester.getKujob().createQueue({ name: 'myqueue' });
-      const job = queue.createJob({}).schedule(
-        new Delay({
-          duration: Duration.milliseconds(DELAY_IN_MS),
+      const driver = new TestDriver(tester);
+      await driver.setup({
+        schedule: new Delay({
+          duration: Duration.milliseconds(15),
           repeat: true,
         }),
-      );
-
-      await job.save();
-
-      const processor = new SpyProcessor<{ position: number }>();
-      queue.setProcessor(processor);
-      queue.startProcessing();
-
-      await expect
-        .poll(() => processor.getJobsData().length)
-        .toBeGreaterThanOrEqual(2);
+      });
+      await driver.waitUntilJobIsProcessedAtLeast(2);
     });
   });
 });
+
+class TestDriver {
+  private jobId: string | null = null;
+  private processor: SpyProcessor = new SpyProcessor();
+  private queue: Queue | null = null;
+
+  constructor(private readonly tester: Tester) {}
+
+  async setup({ schedule }: { schedule: Schedule | null }) {
+    this.queue = this.tester.getKujob().createQueue({ name: 'myqueue' });
+    const job = this.queue.createJob({});
+
+    if (schedule) {
+      job.schedule(schedule);
+    }
+
+    const { id } = await job.save();
+    this.jobId = id;
+
+    this.queue.setProcessor(this.processor);
+  }
+
+  async waitUntilJobIsProcessed() {
+    this.queue!.startProcessing();
+    return expect.poll(() => this.processor.getJobsData()).toHaveLength(1);
+  }
+
+  async waitUntilJobIsProcessedAtLeast(times: number) {
+    this.queue!.startProcessing();
+    return expect
+      .poll(() => this.processor.getJobsData().length)
+      .toBeGreaterThanOrEqual(times);
+  }
+
+  async expectJobToHaveRunWithin(delay: number) {
+    const timeToCompletion = await this.getTimeToCompletion();
+    expect(timeToCompletion).toBeLessThanOrEqual(delay);
+  }
+
+  async expectJobToHaveRunAfter(delay: number) {
+    const timeToCompletion = await this.getTimeToCompletion();
+    expect(timeToCompletion).toBeGreaterThanOrEqual(delay);
+  }
+
+  private async getTimeToCompletion() {
+    const savedJob = (await this.queue!.readJob(this.jobId!))!;
+
+    return savedJob.finishedAt()!.getTime() - savedJob.createdAt()!.getTime();
+  }
+}
