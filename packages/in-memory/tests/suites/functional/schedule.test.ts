@@ -1,9 +1,12 @@
+import {
+  DelaySchedule,
+  Duration,
+  Queue,
+  ScheduleStrategy,
+} from '@ancyrjs/kujob-core';
+import { SpyProcessor } from '@ancyrjs/kujob-testing';
 import { getTestedDrivers } from '../../config/tested-drivers.js';
-import { SpyProcessor } from '../../adapters/spy-processor.js';
-import { Duration } from '../../../src/utils/duration.js';
-import { DelaySchedule } from '../../../src/core/schedule/delay-schedule.js';
-import { ScheduleStrategy } from '../../../src/core/schedule/schedule-strategy.js';
-import { Queue } from '../../../src/core/queue.js';
+
 import { Tester } from '../../config/tester.js';
 
 describe.each(getTestedDrivers())('%s', (tester) => {

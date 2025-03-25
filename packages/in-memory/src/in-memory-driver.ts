@@ -1,10 +1,13 @@
-import { CreateQueueParams, Driver } from '../../core/driver.js';
-import { Queue } from '../../core/queue.js';
-import { DateProvider } from '../../core/date/date-provider.js';
+import {
+  CreateQueueParams,
+  CurrentDateProvider,
+  DateProvider,
+  Driver,
+  Looper,
+  Queue,
+  TimeoutLooper,
+} from '@ancyrjs/kujob-core';
 import { InMemoryQueue } from './in-memory-queue.js';
-import { Looper } from '../../core/looper/looper.js';
-import { CurrentDateProvider } from '../../core/date/current-date-provider.js';
-import { TimeoutLooper } from '../../core/looper/timeout-looper.js';
 
 export class InMemoryDriver implements Driver {
   private looper: Looper;

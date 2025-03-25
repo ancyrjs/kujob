@@ -1,7 +1,11 @@
-import { BaseJobData, Job, JobSpec } from '../../core/job.js';
+import {
+  BaseJobData,
+  DateProvider,
+  Job,
+  JobSpec,
+  randomUuid,
+} from '@ancyrjs/kujob-core';
 import { InMemoryJobState } from './in-memory-job-state.js';
-import { DateProvider } from '../../core/date/date-provider.js';
-import { randomUuid } from '../../utils/random-uuid.js';
 
 export class InMemoryJob<T extends BaseJobData> implements Job<T> {
   private state: InMemoryJobState<T>;

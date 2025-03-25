@@ -1,5 +1,5 @@
+import { FailingProcessor } from '@ancyrjs/kujob-testing';
 import { getTestedDrivers } from '../../config/tested-drivers.js';
-import { FailingProcessor } from '../../adapters/failing-processor.js';
 
 describe.each(getTestedDrivers())('%s', (tester) => {
   beforeAll(() => tester.beforeAll());

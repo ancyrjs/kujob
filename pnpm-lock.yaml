@@ -76,6 +76,80 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1(typescript@5.8.2)(vitest@3.0.9(@types/node@22.13.10)(yaml@2.7.0))
 
+  packages/in-memory:
+    dependencies:
+      '@ancyrjs/kujob-core':
+        specifier: workspace:*
+        version: link:../core
+      cron-parser:
+        specifier: ^5.0.6
+        version: 5.0.6
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
+    devDependencies:
+      '@ancyrjs/kujob-testing':
+        specifier: workspace:*
+        version: link:../testing
+      '@swc/cli':
+        specifier: ^0.6.0
+        version: 0.6.0(@swc/core@1.11.9)
+      '@swc/core':
+        specifier: ^1.11.9
+        version: 1.11.9
+      '@types/node':
+        specifier: ^22.13.1
+        version: 22.13.10
+      '@vitest/coverage-v8':
+        specifier: ^3.0.9
+        version: 3.0.9(vitest@3.0.9(@types/node@22.13.10)(yaml@2.7.0))
+      prettier:
+        specifier: ^3.5.3
+        version: 3.5.3
+      typescript:
+        specifier: ^5.8.2
+        version: 5.8.2
+      unplugin-swc:
+        specifier: ^1.5.1
+        version: 1.5.1(@swc/core@1.11.9)(rollup@4.35.0)
+      vitest:
+        specifier: ^3.0.9
+        version: 3.0.9(@types/node@22.13.10)(yaml@2.7.0)
+      vitest-mock-extended:
+        specifier: ^3.0.1
+        version: 3.0.1(typescript@5.8.2)(vitest@3.0.9(@types/node@22.13.10)(yaml@2.7.0))
+
+  packages/testing:
+    dependencies:
+      '@ancyrjs/kujob-core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@swc/cli':
+        specifier: ^0.6.0
+        version: 0.6.0(@swc/core@1.11.9)
+      '@swc/core':
+        specifier: ^1.11.9
+        version: 1.11.9
+      '@types/node':
+        specifier: ^22.13.1
+        version: 22.13.10
+      prettier:
+        specifier: ^3.5.3
+        version: 3.5.3
+      typescript:
+        specifier: ^5.8.2
+        version: 5.8.2
+      unplugin-swc:
+        specifier: ^1.5.1
+        version: 1.5.1(@swc/core@1.11.9)(rollup@4.35.0)
+      vitest:
+        specifier: ^3.0.9
+        version: 3.0.9(@types/node@22.13.10)(yaml@2.7.0)
+      vitest-mock-extended:
+        specifier: ^3.0.1
+        version: 3.0.1(typescript@5.8.2)(vitest@3.0.9(@types/node@22.13.10)(yaml@2.7.0))
+
 packages:
 
   '@ampproject/remapping@2.3.0':

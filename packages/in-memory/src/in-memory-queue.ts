@@ -1,16 +1,16 @@
-import { Queue } from '../../core/queue.js';
 import {
   BaseJobData,
   BuiltJob,
+  CreateQueueParams,
+  DateProvider,
+  JobBuilder,
   JobSpec,
+  Looper,
   NonAcquiredJob,
-} from '../../core/job.js';
-import { Processor } from '../../core/processor.js';
-import { CreateQueueParams } from '../../core/driver.js';
+  Processor,
+  Queue,
+} from '@ancyrjs/kujob-core';
 import { InMemoryJobState } from './in-memory-job-state.js';
-import { Looper } from '../../core/looper/looper.js';
-import { DateProvider } from '../../core/date/date-provider.js';
-import { JobBuilder } from '../../core/job-builder.js';
 import { InMemoryJob } from './in-memory-job.js';
 
 export class InMemoryQueue implements Queue {

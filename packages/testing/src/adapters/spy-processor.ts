@@ -1,5 +1,4 @@
-import { Processor } from '../../src/core/processor.js';
-import { BaseJobData, Job } from '../../src/core/job.js';
+import { BaseJobData, Job, Processor } from '@ancyrjs/kujob-core';
 
 type JobInfo<T extends BaseJobData> = {
   data: T;

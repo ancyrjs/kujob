@@ -1,4 +1,4 @@
-import { BaseJobData, Job } from '../../src/core/job.js';
+import { BaseJobData, Job } from '@ancyrjs/kujob-core';
 import { SpyProcessor } from './spy-processor.js';
 
 export class FailingProcessor<

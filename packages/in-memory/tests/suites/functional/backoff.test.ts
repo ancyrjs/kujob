@@ -1,11 +1,12 @@
+import {
+  BackoffStrategy,
+  Duration,
+  FixedBackoff,
+  Queue,
+} from '@ancyrjs/kujob-core';
+import { expectDate, FailingProcessor } from '@ancyrjs/kujob-testing';
 import { getTestedDrivers } from '../../config/tested-drivers.js';
-import { FailingProcessor } from '../../adapters/failing-processor.js';
-import { expectDate } from '../../utils/date-within.js';
-import { Queue } from '../../../src/core/queue.js';
 import { Tester } from '../../config/tester.js';
-import { BackoffStrategy } from '../../../src/core/backoff/backoff-strategy.js';
-import { FixedBackoff } from '../../../src/core/backoff/fixed-backoff.js';
-import { Duration } from '../../../src/utils/duration.js';
 
 describe.each(getTestedDrivers())('%s', (tester) => {
   beforeAll(() => tester.beforeAll());
