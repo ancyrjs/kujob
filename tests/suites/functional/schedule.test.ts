@@ -1,8 +1,8 @@
 import { getTestedDrivers } from '../../config/tested-drivers.js';
 import { SpyProcessor } from '../../adapters/spy-processor.js';
 import { Duration } from '../../../src/utils/duration.js';
-import { Delay } from '../../../src/core/schedule/delay.js';
-import { Schedule } from '../../../src/core/schedule/schedule.js';
+import { DelaySchedule } from '../../../src/core/schedule/delay-schedule.js';
+import { ScheduleStrategy } from '../../../src/core/schedule/schedule-strategy.js';
 import { Queue } from '../../../src/core/queue.js';
 import { Tester } from '../../config/tester.js';
 
@@ -25,7 +25,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
     test('job is not run before a delay', async () => {
       const driver = new TestDriver(tester);
       await driver.setup({
-        schedule: new Delay({
+        schedule: new DelaySchedule({
           duration: Duration.milliseconds(30),
         }),
       });
@@ -36,7 +36,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
     test('repeat after delay', async () => {
       const driver = new TestDriver(tester);
       await driver.setup({
-        schedule: new Delay({
+        schedule: new DelaySchedule({
           duration: Duration.milliseconds(15),
           repeat: true,
         }),
@@ -53,7 +53,7 @@ class TestDriver {
 
   constructor(private readonly tester: Tester) {}
 
-  async setup({ schedule }: { schedule: Schedule | null }) {
+  async setup({ schedule }: { schedule: ScheduleStrategy | null }) {
     this.queue = this.tester.getKujob().createQueue({ name: 'myqueue' });
     const job = this.queue.createJob({});
 

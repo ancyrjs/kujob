@@ -17,11 +17,16 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
 
     return new InMemoryJob({
       state: {
-        ...spec,
         id: spec.id ?? randomUuid(),
+        data: spec.data,
+        priority: spec.priority,
+        attemptsDone: 0,
+        attemptsMax: spec.attempts,
         status: 'waiting',
         createdAt: now,
+        schedule: spec.schedule,
         scheduledAt: spec.schedule.firstRunAt({ now }),
+        backoff: spec.backoff,
         startedAt: null,
         updatedAt: null,
         finishedAt: null,
@@ -88,7 +93,7 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
   }
 
   remainingAttempts(): number {
-    return this.state.attempts;
+    return this.state.attemptsDone;
   }
 
   getState() {
@@ -117,7 +122,9 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
   }
 
   async fail(reason: any): Promise<void> {
-    if (this.state.attempts > 1) {
+    this.state.attemptsDone++;
+
+    if (this.state.attemptsDone < this.state.attemptsMax) {
       this.reschedule();
       return;
     }
@@ -126,8 +133,14 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
   }
 
   private reschedule(): void {
-    this.state.attempts--;
+    const nextRun = this.state.backoff.scheduleFor({
+      now: this.dateProvider.getDate(),
+      attemptsDone: this.state.attemptsDone,
+      attemptsMax: this.state.attemptsMax,
+    });
+
     this.state.status = 'waiting';
+    this.state.scheduledAt = nextRun;
     return;
   }
 

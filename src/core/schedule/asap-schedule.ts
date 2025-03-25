@@ -1,4 +1,4 @@
-import { RunAtParams, Schedule } from './schedule.js';
+import { RunAtParams, ScheduleStrategy } from './schedule-strategy.js';
 import { isObj } from '../../utils/validation.js';
 
 type Serialized = {
@@ -8,19 +8,19 @@ type Serialized = {
 /**
  * Run the job as soon as possible.
  */
-export class Asap implements Schedule {
+export class AsapSchedule implements ScheduleStrategy {
   /**
    * The Asap schedule has no specific configuration,
    * So it makes sense to use a singleton instance.
    */
-  static INSTANCE = new Asap();
+  static INSTANCE = new AsapSchedule();
 
   static deserializable(data: object): data is Serialized {
     return isObj(data) && 'type' in data && data['type'] === 'asap';
   }
 
   static deserialize(data: Serialized) {
-    return new Asap();
+    return new AsapSchedule();
   }
 
   serialize(): Serialized {

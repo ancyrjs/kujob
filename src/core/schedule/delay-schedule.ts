@@ -1,4 +1,4 @@
-import { RunAtParams, Schedule } from './schedule.js';
+import { RunAtParams, ScheduleStrategy } from './schedule-strategy.js';
 import { Duration } from '../../utils/duration.js';
 import { isObj } from '../../utils/validation.js';
 
@@ -12,7 +12,7 @@ type Serialized = {
  * Delay the execution of a job for a given duration.
  * The job can optionally be repeated.
  */
-export class Delay implements Schedule {
+export class DelaySchedule implements ScheduleStrategy {
   private duration: Duration;
   private repeat: boolean;
 
@@ -26,7 +26,7 @@ export class Delay implements Schedule {
   }
 
   static deserialize(data: Serialized) {
-    return new Delay({ duration: Duration.milliseconds(data.ms) });
+    return new DelaySchedule({ duration: Duration.milliseconds(data.ms) });
   }
 
   serialize(): Serialized {

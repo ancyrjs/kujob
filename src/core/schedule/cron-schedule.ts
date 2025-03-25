@@ -1,5 +1,5 @@
 import { CronExpressionParser } from 'cron-parser';
-import { RunAtParams, Schedule } from './schedule.js';
+import { RunAtParams, ScheduleStrategy } from './schedule-strategy.js';
 import { isObj } from '../../utils/validation.js';
 
 type Serialized = {
@@ -11,7 +11,7 @@ type Serialized = {
 /**
  * Runs a job according to a cron expression.
  */
-export class Cron implements Schedule {
+export class CronSchedule implements ScheduleStrategy {
   private pattern: string;
   private timezone: string | null = null;
 
@@ -20,7 +20,7 @@ export class Cron implements Schedule {
   }
 
   static deserialize(data: Serialized) {
-    return new Cron({
+    return new CronSchedule({
       pattern: data.pattern,
       timezone: data.timezone,
     });

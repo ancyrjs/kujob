@@ -1,7 +1,9 @@
 import { BaseJobData, BuiltJob, JobSpec } from './job.js';
 import { Queue } from './queue.js';
-import { Schedule } from './schedule/schedule.js';
-import { Asap } from './schedule/asap.js';
+import { ScheduleStrategy } from './schedule/schedule-strategy.js';
+import { AsapSchedule } from './schedule/asap-schedule.js';
+import { AsapBackoff } from './backoff/asap-backoff.js';
+import { BackoffStrategy } from './backoff/backoff-strategy.js';
 
 export class JobBuilder<T extends BaseJobData = BaseJobData> {
   private state: JobSpec<T>;
@@ -12,7 +14,8 @@ export class JobBuilder<T extends BaseJobData = BaseJobData> {
       id: null,
       data: props.data,
       attempts: 1,
-      schedule: Asap.INSTANCE,
+      schedule: AsapSchedule.INSTANCE,
+      backoff: AsapBackoff.INSTANCE,
       priority: 0,
     };
 
@@ -24,8 +27,13 @@ export class JobBuilder<T extends BaseJobData = BaseJobData> {
     return this;
   }
 
-  schedule(schedule: Schedule): this {
+  schedule(schedule: ScheduleStrategy): this {
     this.state.schedule = schedule;
+    return this;
+  }
+
+  backoff(backoff: BackoffStrategy): this {
+    this.state.backoff = backoff;
     return this;
   }
 

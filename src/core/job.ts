@@ -1,4 +1,5 @@
-import { Schedule } from './schedule/schedule.js';
+import { ScheduleStrategy } from './schedule/schedule-strategy.js';
+import { BackoffStrategy } from './backoff/backoff-strategy.js';
 
 export type BaseJobData = Record<string, any>;
 
@@ -51,6 +52,7 @@ export type JobSpec<T extends BaseJobData = BaseJobData> = {
   id: string | null;
   data: T;
   attempts: number;
-  schedule: Schedule;
+  schedule: ScheduleStrategy;
+  backoff: BackoffStrategy;
   priority: number;
 };

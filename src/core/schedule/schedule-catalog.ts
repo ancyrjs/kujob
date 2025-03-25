@@ -1,8 +1,10 @@
-import { Asap } from './asap.js';
-import { Delay } from './delay.js';
-import { Schedule } from './schedule.js';
+import { AsapSchedule } from './asap-schedule.js';
+import { DelaySchedule } from './delay-schedule.js';
+import { ScheduleStrategy } from './schedule-strategy.js';
 
-export interface ScheduleConstructor<T extends Schedule = Schedule> {
+export interface ScheduleConstructor<
+  T extends ScheduleStrategy = ScheduleStrategy,
+> {
   new (...args: any[]): T;
   deserializable: (obj: object) => boolean;
   deserialize: (obj: any) => T;
@@ -14,7 +16,7 @@ export interface ScheduleConstructor<T extends Schedule = Schedule> {
  * automatically be handled by the system.
  */
 export class ScheduleCatalog {
-  private static Options: ScheduleConstructor[] = [Asap, Delay];
+  private static Options: ScheduleConstructor[] = [AsapSchedule, DelaySchedule];
 
   /**
    * Register a new schedule object.

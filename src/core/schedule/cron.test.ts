@@ -1,4 +1,4 @@
-import { Cron } from './cron.js';
+import { CronSchedule } from './cron-schedule.js';
 
 const NOW = new Date('2025-01-01T00:00:00Z');
 
@@ -24,7 +24,7 @@ test.each([
     expected: '2025-01-05T00:00:00.000Z',
   },
 ])('$pattern', ({ pattern, expected }) => {
-  const cron = new Cron({
+  const cron = new CronSchedule({
     pattern,
     timezone: 'utc',
   });

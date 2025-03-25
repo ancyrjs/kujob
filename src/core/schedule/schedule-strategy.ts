@@ -5,7 +5,7 @@ export type RunAtParams = {
 /**
  * Strategy to schedule the next run of a job.
  */
-export interface Schedule {
+export interface ScheduleStrategy {
   /**
    * Serialize the data representation of the object
    * to be stored in database without the database knowing

@@ -1,12 +1,15 @@
 import { BaseJobData, JobStatus } from '../../core/job.js';
-import { Schedule } from '../../core/schedule/schedule.js';
+import { ScheduleStrategy } from '../../core/schedule/schedule-strategy.js';
+import { BackoffStrategy } from '../../core/backoff/backoff-strategy.js';
 
 export type InMemoryJobState<T extends BaseJobData = BaseJobData> = {
   id: string;
   data: T;
-  attempts: number;
+  attemptsMax: number;
+  attemptsDone: number;
   priority: number;
-  schedule: Schedule;
+  backoff: BackoffStrategy;
+  schedule: ScheduleStrategy;
   status: JobStatus;
   createdAt: Date;
   startedAt: Date | null;
