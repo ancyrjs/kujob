@@ -2,15 +2,13 @@ import { ScheduleStrategy } from './schedule/schedule-strategy.js';
 import { BackoffStrategy } from './backoff/backoff-strategy.js';
 
 export type BaseJobData = Record<string, any>;
-
 export type JobStatus = 'waiting' | 'processing' | 'completed' | 'failed';
 
 /**
  * Represent a job that has not been acquired
  * Such a job cannot be processed because whoever got this handle has no guarantee
  * that the job is acquired.
- *
- * Mainly used for reading
+ * Mainly used for reading.
  */
 export interface NonAcquiredJob<T extends BaseJobData = BaseJobData> {
   getId(): string;
@@ -46,7 +44,7 @@ export type BuiltJob = {
 };
 
 /**
- * Job's data in raw form
+ * Specification of a job
  */
 export type JobSpec<T extends BaseJobData = BaseJobData> = {
   id: string | null;

@@ -15,7 +15,8 @@ Drivers provided :
 - Retry failed jobs a fixed number of times
 - Delayed Jobs
 - Custom Scheduling
-- Configure either a linear or exponential backoff for failed jobs (TODO)
+- Configure back-off for failed jobs
 - Recovery of stalled jobs (TODO)
+- Cleaning of stalled workers (TODO)
 - Worker Limiter (max job concurrency) (TODO)
 - NestJS Integration (TODO)
