@@ -1,6 +1,6 @@
 import { Looper, Runnable } from './looper.js';
 
-export class DefaultLooper implements Looper {
+export class TimeoutLooper implements Looper {
   private timeoutHandle: NodeJS.Timeout | null = null;
   private running = false;
   private runnable: Runnable | null = null;
@@ -16,7 +16,7 @@ export class DefaultLooper implements Looper {
   }
 
   clone(): Looper {
-    return new DefaultLooper({
+    return new TimeoutLooper({
       timeoutDelay: this.timeoutDelay,
     });
   }

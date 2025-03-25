@@ -17,19 +17,19 @@ export class InMemoryQueue implements Queue {
   private name: string;
   private queue: InMemoryJobState[] = [];
   private processor: Processor | null = null;
-  private looper: Looper;
+  private jobsLooper: Looper;
   private dateProvider: DateProvider;
 
   constructor(props: {
     params: CreateQueueParams;
-    looper: Looper;
+    jobsLooper: Looper;
     dateProvider: DateProvider;
   }) {
     this.name = props.params.name;
-    this.looper = props.looper;
+    this.jobsLooper = props.jobsLooper;
     this.dateProvider = props.dateProvider;
 
-    this.looper.configure(() => this.runProcessing());
+    this.jobsLooper.configure(() => this.processJobs());
   }
 
   getName(): string {
@@ -90,19 +90,19 @@ export class InMemoryQueue implements Queue {
   }
 
   startProcessing(): void {
-    this.looper.start();
+    this.jobsLooper.start();
   }
 
   stopProcessing(): void {
-    this.looper.stop();
+    this.jobsLooper.stop();
   }
 
   setLooper(looper: Looper) {
-    this.looper = looper;
-    this.looper.configure(() => this.runProcessing());
+    this.jobsLooper = looper;
+    this.jobsLooper.configure(() => this.processJobs());
   }
 
-  private async runProcessing() {
+  private async processJobs() {
     if (!this.processor) {
       throw new Error('Processor is not set');
     }
