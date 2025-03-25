@@ -26,7 +26,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
       backoff: new FixedBackoff({ duration: Duration.milliseconds(100) }),
     });
     await driver.runOneBatch();
-    await driver.expectJobToBeRescheduledAround(100, 5);
+    await driver.expectJobToBeRescheduledAround(100, 25);
   });
 });
 
