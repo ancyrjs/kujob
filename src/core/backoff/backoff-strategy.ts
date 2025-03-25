@@ -1,6 +1,18 @@
 export type ScheduleForParams = {
+  /**
+   * The date at the moment the job is tasked to be rescheduled
+   */
   now: Date;
+
+  /**
+   * The number of attempts that have been done so far
+   */
   attemptsDone: number;
+
+  /**
+   * The maximum number of attempts that can be done
+   * Not used.
+   */
   attemptsMax: number;
 };
 

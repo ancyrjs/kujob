@@ -40,7 +40,6 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
     const processor = new FailingProcessor<{ position: number }>();
     queue.setProcessor(processor);
-
     queue.startProcessing();
 
     await expect
@@ -49,5 +48,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
         return job.isFailed();
       })
       .toBe(true);
+
+    expect(processor.getJobsData()).toHaveLength(3);
   });
 });

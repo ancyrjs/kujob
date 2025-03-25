@@ -5,6 +5,7 @@ import { Queue } from '../../../src/core/queue.js';
 import { Tester } from '../../config/tester.js';
 import { BackoffStrategy } from '../../../src/core/backoff/backoff-strategy.js';
 import { FixedBackoff } from '../../../src/core/backoff/fixed-backoff.js';
+import { Duration } from '../../../src/utils/duration.js';
 
 describe.each(getTestedDrivers())('%s', (tester) => {
   beforeAll(() => tester.beforeAll());
@@ -21,7 +22,9 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
   test('fixed backoff', async () => {
     const driver = new TestDriver(tester);
-    await driver.setup({ backoff: new FixedBackoff({ ms: 100 }) });
+    await driver.setup({
+      backoff: new FixedBackoff({ duration: Duration.milliseconds(100) }),
+    });
     await driver.runOneBatch();
     await driver.expectJobToBeRescheduledAround(100, 5);
   });

@@ -1,6 +1,8 @@
 import { BackoffStrategy } from './backoff-strategy.js';
 import { AsapBackoff } from './asap-backoff.js';
 import { FixedBackoff } from './fixed-backoff.js';
+import { LinearBackoff } from './linear-backoff.js';
+import { ExponentialBackoff } from './exponential-backoff.js';
 
 export interface BackoffConstructor<
   T extends BackoffStrategy = BackoffStrategy,
@@ -16,7 +18,12 @@ export interface BackoffConstructor<
  * automatically be handled by the system.
  */
 export class BackoffCatalog {
-  private static Options: BackoffConstructor[] = [AsapBackoff, FixedBackoff];
+  private static Options: BackoffConstructor[] = [
+    AsapBackoff,
+    FixedBackoff,
+    LinearBackoff,
+    ExponentialBackoff,
+  ];
 
   /**
    * Register a new backoff object.

@@ -34,4 +34,8 @@ export class Duration {
   addToDate(date: Date): Date {
     return new Date(date.getTime() + this.ms);
   }
+
+  mulityplyBy(factor: number): Duration {
+    return new Duration(this.ms * factor);
+  }
 }

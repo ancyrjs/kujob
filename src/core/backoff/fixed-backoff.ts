@@ -1,6 +1,6 @@
 import { isObj } from '../../utils/validation.js';
 import { BackoffStrategy, ScheduleForParams } from './backoff-strategy.js';
-import { addMilliseconds } from 'date-fns';
+import { Duration } from '../../utils/duration.js';
 
 type Serialized = {
   type: 'fixed';
@@ -11,7 +11,7 @@ type Serialized = {
  * Rerun the job after a fixed delay
  */
 export class FixedBackoff implements BackoffStrategy {
-  private ms: number;
+  private duration: Duration;
 
   static deserializable(data: object): data is Serialized {
     return isObj(data) && 'type' in data && data['type'] === 'delay';
@@ -19,22 +19,22 @@ export class FixedBackoff implements BackoffStrategy {
 
   static deserialize(data: Serialized) {
     return new FixedBackoff({
-      ms: data.ms,
+      duration: Duration.milliseconds(data.ms),
     });
   }
 
-  constructor(props: { ms: number }) {
-    this.ms = props.ms;
+  constructor(props: { duration: Duration }) {
+    this.duration = props.duration;
   }
 
   serialize(): Serialized {
     return {
       type: 'fixed',
-      ms: this.ms,
+      ms: this.duration.toMilliseconds(),
     };
   }
 
   scheduleFor(params: ScheduleForParams): Date {
-    return addMilliseconds(params.now, this.ms);
+    return this.duration.addToDate(params.now);
   }
 }
