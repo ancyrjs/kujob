@@ -14,7 +14,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
     const processor = new FailingProcessor<{ position: number }>();
     queue.setProcessor(processor);
 
-    await tester.processJobs(queue);
+    await tester.runOneBatch(queue);
 
     const job = await queue.readJob(jobId);
     expect(job!.isFailed()).toBe(true);
@@ -27,7 +27,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
     const processor = new FailingProcessor<{ position: number }>();
     queue.setProcessor(processor);
 
-    await tester.processJobs(queue);
+    await tester.runOneBatch(queue);
 
     const job = (await queue.readJob(jobId))!;
     expect(job.isFailed()).toBe(false);

@@ -34,7 +34,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
       queue.setProcessor(new SpyProcessor());
 
       // Don't wait
-      tester.processJobs(queue);
+      tester.runOneBatch(queue);
 
       const savedJob = (await queue.readJob(id))!;
       expect(savedJob.isProcessing()).toBe(true);
@@ -45,7 +45,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
       queue.setProcessor(new SpyProcessor());
 
-      await tester.processJobs(queue);
+      await tester.runOneBatch(queue);
 
       const savedJob = (await queue.readJob(id))!;
       expect(savedJob.isCompleted()).toBe(true);
@@ -56,7 +56,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
       queue.setProcessor(new FailingProcessor());
 
-      await tester.processJobs(queue);
+      await tester.runOneBatch(queue);
 
       const savedJob = (await queue.readJob(id))!;
       expect(savedJob.isFailed()).toBe(true);
@@ -71,7 +71,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
       const processor = new SpyProcessor();
       queue.setProcessor(processor);
 
-      await tester.processJobs(queue);
+      await tester.runOneBatch(queue);
 
       expect(processor.getJobsData()).toHaveLength(1);
       expect(processor.getJobDataAt(0)).toEqual(data);

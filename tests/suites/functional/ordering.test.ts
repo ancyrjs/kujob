@@ -18,7 +18,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
     const processor = new SpyProcessor<{ position: number }>();
     queue.setProcessor(processor);
 
-    await tester.processJobs(queue);
+    await tester.runOneBatch(queue);
 
     expect(processor.getJobsData()).toHaveLength(3);
     expect(processor.getJobsData()).toEqual([
@@ -39,7 +39,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
     const processor = new SpyProcessor<{ position: number }>();
     queue.setProcessor(processor);
 
-    await tester.processJobs(queue);
+    await tester.runOneBatch(queue);
 
     expect(processor.getJobsData()).toHaveLength(3);
     expect(processor.getJobsData()).toEqual([
@@ -60,7 +60,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
     const processor = new SpyProcessor<{ position: number }>();
     queue.setProcessor(processor);
 
-    await tester.processJobs(queue);
+    await tester.runOneBatch(queue);
 
     expect(processor.getJobsData()).toHaveLength(3);
     expect(processor.getJobsData()).toEqual([

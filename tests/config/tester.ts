@@ -13,7 +13,7 @@ export interface Tester {
 
   getKujob(): Kujob;
 
-  processJobs(queue: Queue): Promise<void>;
+  runOneBatch(queue: Queue): Promise<void>;
 
   name(): string;
 }
@@ -31,7 +31,7 @@ export abstract class BaseTester implements Tester {
 
   abstract name(): string;
 
-  async processJobs(queue: Queue): Promise<void> {
+  async runOneBatch(queue: Queue): Promise<void> {
     queue.startProcessing();
     await waitFor(1);
     queue.stopProcessing();

@@ -24,6 +24,7 @@ export interface NonAcquiredJob<T extends BaseJobData = BaseJobData> {
   scheduledAt(): Date | null;
   finishedAt(): Date | null;
   updatedAt(): Date | null;
+  remainingAttempts(): number;
 }
 
 /**

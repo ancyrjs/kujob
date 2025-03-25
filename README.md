@@ -14,8 +14,8 @@ Drivers provided :
 - Prioritize jobs within a queue
 - Retry failed jobs a fixed number of times
 - Delayed Jobs
-- Custom Scheduling (TODO)
-- Worker Limiter (max job concurrency) (TODO)
+- Custom Scheduling
 - Configure either a linear or exponential backoff for failed jobs (TODO)
 - Recovery of stalled jobs (TODO)
+- Worker Limiter (max job concurrency) (TODO)
 - NestJS Integration (TODO)

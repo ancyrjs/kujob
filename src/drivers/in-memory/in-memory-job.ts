@@ -87,6 +87,10 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
     return this.state.failureReason;
   }
 
+  remainingAttempts(): number {
+    return this.state.attempts;
+  }
+
   getState() {
     return this.state;
   }
