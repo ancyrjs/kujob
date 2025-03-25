@@ -1,6 +1,7 @@
 import { Kujob } from '../../src/index.js';
-import { waitFor } from './wait-for.js';
 import { Queue } from '../../src/core/queue.js';
+import { StepLooper } from '../../src/core/looper/step-looper.js';
+import { waitEndOfLoop } from './event-loop.js';
 
 export interface Tester {
   beforeAll(): Promise<void>;
@@ -32,9 +33,10 @@ export abstract class BaseTester implements Tester {
   abstract name(): string;
 
   async runOneBatch(queue: Queue): Promise<void> {
-    queue.startProcessing();
-    await waitFor(1);
-    queue.stopProcessing();
+    const looper = new StepLooper();
+    queue.setLooper(looper);
+    await looper.forward();
+    await waitEndOfLoop();
   }
 
   toString() {

@@ -97,6 +97,11 @@ export class InMemoryQueue implements Queue {
     this.looper.stop();
   }
 
+  setLooper(looper: Looper) {
+    this.looper = looper;
+    this.looper.configure(() => this.runProcessing());
+  }
+
   private async runProcessing() {
     if (!this.processor) {
       throw new Error('Processor is not set');
