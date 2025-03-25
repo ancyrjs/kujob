@@ -1,5 +1,5 @@
 import { Kujob, Queue, StepLooper } from '@ancyrjs/kujob-core';
-import { waitEndOfLoop } from '@ancyrjs/kujob-testing';
+import { waitEndOfLoop } from '@ancyrjs/kujob-testutils';
 
 export interface Tester {
   beforeAll(): Promise<void>;

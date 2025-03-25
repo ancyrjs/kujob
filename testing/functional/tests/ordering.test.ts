@@ -1,4 +1,4 @@
-import { SpyProcessor } from '@ancyrjs/kujob-testing';
+import { SpyProcessor } from '@ancyrjs/kujob-testutils';
 import { getTestedDrivers } from './config/tested-drivers.js';
 
 describe.each(getTestedDrivers())('%s', (tester) => {

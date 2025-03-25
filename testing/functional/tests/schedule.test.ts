@@ -4,7 +4,7 @@ import {
   Queue,
   ScheduleStrategy,
 } from '@ancyrjs/kujob-core';
-import { SpyProcessor } from '@ancyrjs/kujob-testing';
+import { SpyProcessor } from '@ancyrjs/kujob-testutils';
 import { getTestedDrivers } from './config/tested-drivers.js';
 
 import { Tester } from './config/tester.js';

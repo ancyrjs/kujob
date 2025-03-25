@@ -13,7 +13,7 @@
   "devDependencies": {
     "@ancyrjs/kujob-core": "workspace:*",
     "@ancyrjs/kujob-in-memory": "workspace:*",
-    "@ancyrjs/kujob-testing": "workspace:*",
+    "@ancyrjs/kujob-testutils": "workspace:*",
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.11.9",
     "@types/node": "^22.13.1",

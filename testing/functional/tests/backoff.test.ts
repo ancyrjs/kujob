@@ -4,7 +4,7 @@ import {
   FixedBackoff,
   Queue,
 } from '@ancyrjs/kujob-core';
-import { expectDate, FailingProcessor } from '@ancyrjs/kujob-testing';
+import { expectDate, FailingProcessor } from '@ancyrjs/kujob-testutils';
 import { getTestedDrivers } from './config/tested-drivers.js';
 import { Tester } from './config/tester.js';
 

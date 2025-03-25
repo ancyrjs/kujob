@@ -85,9 +85,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
-      '@ancyrjs/kujob-testing':
+      '@ancyrjs/kujob-testutils':
         specifier: workspace:*
-        version: link:../testing
+        version: link:../../testing/testutils
       '@swc/cli':
         specifier: ^0.6.0
         version: 0.6.0(@swc/core@1.11.9)
@@ -119,12 +119,17 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1(typescript@5.8.2)(vitest@3.0.9(@types/node@22.13.10)(yaml@2.7.0))
 
-  packages/testing:
-    dependencies:
+  testing/functional:
+    devDependencies:
       '@ancyrjs/kujob-core':
         specifier: workspace:*
-        version: link:../core
-    devDependencies:
+        version: link:../../packages/core
+      '@ancyrjs/kujob-in-memory':
+        specifier: workspace:*
+        version: link:../../packages/in-memory
+      '@ancyrjs/kujob-testutils':
+        specifier: workspace:*
+        version: link:../testutils
       '@swc/cli':
         specifier: ^0.6.0
         version: 0.6.0(@swc/core@1.11.9)
@@ -150,17 +155,12 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1(typescript@5.8.2)(vitest@3.0.9(@types/node@22.13.10)(yaml@2.7.0))
 
-  testing/functional:
-    devDependencies:
+  testing/testutils:
+    dependencies:
       '@ancyrjs/kujob-core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@ancyrjs/kujob-in-memory':
-        specifier: workspace:*
-        version: link:../../packages/in-memory
-      '@ancyrjs/kujob-testing':
-        specifier: workspace:*
-        version: link:../../packages/testing
+    devDependencies:
       '@swc/cli':
         specifier: ^0.6.0
         version: 0.6.0(@swc/core@1.11.9)
