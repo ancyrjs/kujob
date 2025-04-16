@@ -1,14 +1,10 @@
-import {
-  BaseJobData,
-  DateProvider,
-  Job,
-  JobSpec,
-  randomUuid,
-} from '@ancyrjs/kujob-core';
-import { InMemoryJobState } from './in-memory-job-state.js';
+import { DefaultJobState } from './default-job-state.js';
+import { BaseJobData, Job, JobSpec } from './job.js';
+import { DateProvider } from './date/date-provider.js';
+import { randomUuid } from './utils/random-uuid.js';
 
-export class InMemoryJob<T extends BaseJobData> implements Job<T> {
-  private state: InMemoryJobState<T>;
+export class DefaultJob<T extends BaseJobData> implements Job<T> {
+  private state: DefaultJobState<T>;
   private dateProvider: DateProvider;
 
   static fromSpec(
@@ -19,7 +15,7 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
   ) {
     const now = props.dateProvider.getDate();
 
-    return new InMemoryJob({
+    return new DefaultJob({
       state: {
         id: spec.id ?? randomUuid(),
         data: spec.data,
@@ -41,7 +37,7 @@ export class InMemoryJob<T extends BaseJobData> implements Job<T> {
   }
 
   constructor(props: {
-    state: InMemoryJobState<T>;
+    state: DefaultJobState<T>;
     dateProvider: DateProvider;
   }) {
     this.state = props.state;

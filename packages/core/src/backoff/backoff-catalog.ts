@@ -39,7 +39,7 @@ export class BackoffCatalog {
    * Match serialized data to a backoff object.
    * @param data
    */
-  static findFromSerialized(data: object): BackoffConstructor | null {
+  static deserialize(data: object): BackoffConstructor | null {
     return this.Options.find((option) => option.deserializable(data)) ?? null;
   }
 }

@@ -1,11 +1,8 @@
-import {
-  BackoffStrategy,
-  BaseJobData,
-  JobStatus,
-  ScheduleStrategy,
-} from '@ancyrjs/kujob-core';
+import { BaseJobData, JobStatus } from './job.js';
+import { BackoffStrategy } from './backoff/backoff-strategy.js';
+import { ScheduleStrategy } from './schedule/schedule-strategy.js';
 
-export type InMemoryJobState<T extends BaseJobData = BaseJobData> = {
+export type DefaultJobState<T extends BaseJobData = BaseJobData> = {
   id: string;
   data: T;
   attemptsMax: number;

@@ -33,6 +33,8 @@ export {
   BaseJobData,
   BuiltJob,
 } from './job.js';
+export { DefaultJob } from './default-job.js';
+export { DefaultJobState } from './default-job-state.js';
 export { JobBuilder } from './job-builder.js';
 export { Processor } from './processor.js';
 export { Queue } from './queue.js';

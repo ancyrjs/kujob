@@ -3,6 +3,8 @@ import {
   BuiltJob,
   CreateQueueParams,
   DateProvider,
+  DefaultJob,
+  DefaultJobState,
   JobBuilder,
   JobSpec,
   Looper,
@@ -10,12 +12,10 @@ import {
   Processor,
   Queue,
 } from '@ancyrjs/kujob-core';
-import { InMemoryJobState } from './in-memory-job-state.js';
-import { InMemoryJob } from './in-memory-job.js';
 
 export class InMemoryQueue implements Queue {
   private name: string;
-  private queue: InMemoryJobState[] = [];
+  private queue: DefaultJobState[] = [];
   private processor: Processor | null = null;
   private jobsLooper: Looper;
   private dateProvider: DateProvider;
@@ -60,7 +60,7 @@ export class InMemoryQueue implements Queue {
   }
 
   async addJobSpec(spec: JobSpec): Promise<BuiltJob> {
-    const job = InMemoryJob.fromSpec(spec, {
+    const job = DefaultJob.fromSpec(spec, {
       dateProvider: this.dateProvider,
     });
 
@@ -79,8 +79,8 @@ export class InMemoryQueue implements Queue {
       return null;
     }
 
-    return new InMemoryJob({
-      state: entry as InMemoryJobState<T>,
+    return new DefaultJob({
+      state: entry as DefaultJobState<T>,
       dateProvider: this.dateProvider,
     });
   }
@@ -107,7 +107,7 @@ export class InMemoryQueue implements Queue {
       throw new Error('Processor is not set');
     }
 
-    // Prevent the processor from being erased by the time it is called
+    // Prevent the processor from being erased by the time this function is called
     const processor = this.processor;
 
     // Get all jobs that are waiting to be processed
@@ -120,7 +120,7 @@ export class InMemoryQueue implements Queue {
 
     // Process jobs
     for (const state of jobsToProcess) {
-      const acquiredJob = new InMemoryJob({
+      const acquiredJob = new DefaultJob({
         state,
         dateProvider: this.dateProvider,
       });
