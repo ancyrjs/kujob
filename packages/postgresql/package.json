@@ -1,5 +1,5 @@
 {
-  "name": "@racyn/kujob-in-memory",
+  "name": "@racyn/kujob-postgresql",
   "version": "0.0.1",
   "description": "",
   "keywords": [],
@@ -16,12 +16,17 @@
   "dependencies": {
     "@racyn/kujob-core": "workspace:*"
   },
+  "peerDependencies": {
+    "pg": "^8.0.0"
+  },
   "devDependencies": {
     "@racyn/kujob-testutils": "workspace:*",
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.11.9",
     "@types/node": "^22.13.1",
+    "@types/pg": "^8.11.13",
     "@vitest/coverage-v8": "^3.0.9",
+    "pg": "^8.0.0",
     "prettier": "^3.5.3",
     "rimraf": "^6.0.1",
     "typescript": "^5.8.2",

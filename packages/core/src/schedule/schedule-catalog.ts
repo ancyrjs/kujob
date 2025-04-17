@@ -1,6 +1,7 @@
 import { AsapSchedule } from './asap-schedule.js';
 import { DelaySchedule } from './delay-schedule.js';
 import { ScheduleStrategy } from './schedule-strategy.js';
+import { Optional } from '../utils/optional.js';
 
 export interface ScheduleConstructor<
   T extends ScheduleStrategy = ScheduleStrategy,
@@ -32,7 +33,13 @@ export class ScheduleCatalog {
    * Match serialized data to a schedule object.
    * @param data
    */
-  static deserialize(data: object): ScheduleConstructor | null {
-    return this.Options.find((option) => option.deserializable(data)) ?? null;
+  static deserialize(data: object): Optional<ScheduleStrategy> {
+    const constructor =
+      this.Options.find((option) => option.deserializable(data)) ?? null;
+    if (!constructor) {
+      return Optional.none();
+    }
+
+    return Optional.some(constructor.deserialize(data));
   }
 }

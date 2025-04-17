@@ -3,8 +3,8 @@ import {
   Duration,
   FixedBackoff,
   Queue,
-} from '@ancyrjs/kujob-core';
-import { expectDate, FailingProcessor } from '@ancyrjs/kujob-testutils';
+} from '@racyn/kujob-core';
+import { expectDate, FailingProcessor } from '@racyn/kujob-testutils';
 import { getTestedDrivers } from './config/tested-drivers.js';
 import { Tester } from './config/tester.js';
 
@@ -39,7 +39,7 @@ class TestDriver {
   constructor(private readonly tester: Tester) {}
 
   async setup({ backoff }: { backoff: BackoffStrategy | null }) {
-    this.queue = this.tester.getKujob().createQueue({ name: 'myqueue' });
+    this.queue = await this.tester.getKujob().createQueue({ name: 'myqueue' });
     const job = this.queue.createJob({}).attempts(2);
 
     if (backoff) {

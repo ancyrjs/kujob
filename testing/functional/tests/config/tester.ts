@@ -1,5 +1,5 @@
-import { Kujob, Queue, StepLooper } from '@ancyrjs/kujob-core';
-import { waitEndOfLoop } from '@ancyrjs/kujob-testutils';
+import { Kujob, Queue, StepLooper } from '@racyn/kujob-core';
+import { waitEndOfLoop } from '@racyn/kujob-testutils';
 
 export interface Tester {
   beforeAll(): Promise<void>;
@@ -18,11 +18,17 @@ export interface Tester {
 }
 
 export abstract class BaseTester implements Tester {
-  async beforeAll(): Promise<void> {}
+  async beforeAll(): Promise<void> {
+    await this.getKujob().getDriver().start();
+  }
 
-  async beforeEach(): Promise<void> {}
+  async beforeEach(): Promise<void> {
+    await this.getKujob().getDriver().purge();
+  }
 
-  async afterAll(): Promise<void> {}
+  async afterAll(): Promise<void> {
+    await this.getKujob().getDriver().end();
+  }
 
   async afterEach(): Promise<void> {}
 

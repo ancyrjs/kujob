@@ -11,10 +11,13 @@ import {
   NonAcquiredJob,
   Processor,
   Queue,
-} from '@ancyrjs/kujob-core';
+  randomUuid,
+} from '@racyn/kujob-core';
 
 export class InMemoryQueue implements Queue {
   private name: string;
+  private queueId = randomUuid();
+  private workerId = randomUuid();
   private queue: DefaultJobState[] = [];
   private processor: Processor | null = null;
   private jobsLooper: Looper;
@@ -61,6 +64,7 @@ export class InMemoryQueue implements Queue {
 
   async addJobSpec(spec: JobSpec): Promise<BuiltJob> {
     const job = DefaultJob.fromSpec(spec, {
+      queueId: this.queueId,
       dateProvider: this.dateProvider,
     });
 
@@ -125,7 +129,9 @@ export class InMemoryQueue implements Queue {
         dateProvider: this.dateProvider,
       });
 
-      acquiredJob.acquire();
+      acquiredJob.acquire({
+        workerId: this.workerId,
+      });
 
       // We need to schedule all the jobs before starting to run any of them.
       // We use setImmediate so that jobs run one after the other after all the

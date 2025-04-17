@@ -1,4 +1,4 @@
-import { BaseJobData, Job, Processor } from '@ancyrjs/kujob-core';
+import { BaseJobData, Job, Processor } from '@racyn/kujob-core';
 
 type JobInfo<T extends BaseJobData> = {
   data: T;

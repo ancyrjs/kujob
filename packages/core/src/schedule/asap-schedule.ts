@@ -1,9 +1,6 @@
 import { RunAtParams, ScheduleStrategy } from './schedule-strategy.js';
-import { isObj } from '../utils/validation.js';
 
-type Serialized = {
-  type: 'asap';
-};
+type Serialized = null;
 
 /**
  * Run the job as soon as possible.
@@ -15,8 +12,8 @@ export class AsapSchedule implements ScheduleStrategy {
    */
   static INSTANCE = new AsapSchedule();
 
-  static deserializable(data: object): data is Serialized {
-    return isObj(data) && 'type' in data && data['type'] === 'asap';
+  static deserializable(data: any): data is null {
+    return data === null;
   }
 
   static deserialize(data: Serialized) {
@@ -24,9 +21,7 @@ export class AsapSchedule implements ScheduleStrategy {
   }
 
   serialize(): Serialized {
-    return {
-      type: 'asap',
-    };
+    return null;
   }
 
   firstRunAt(params: RunAtParams): Date {

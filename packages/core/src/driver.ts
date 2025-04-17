@@ -5,5 +5,5 @@ export type CreateQueueParams = {
 };
 
 export interface Driver {
-  createQueue(params: CreateQueueParams): Queue;
+  createQueue(params: CreateQueueParams): Promise<Queue>;
 }

@@ -1,4 +1,4 @@
-import { FailingProcessor } from '@ancyrjs/kujob-testutils';
+import { FailingProcessor } from '@racyn/kujob-testutils';
 import { getTestedDrivers } from './config/tested-drivers.js';
 
 describe.each(getTestedDrivers())('%s', (tester) => {
@@ -8,7 +8,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
   afterEach(() => tester.afterEach());
 
   test('jobs are attempted once by default', async () => {
-    const queue = tester.getKujob().createQueue({ name: 'myqueue' });
+    const queue = await tester.getKujob().createQueue({ name: 'myqueue' });
     const { id: jobId } = await queue.addJob(queue.createJob({}));
 
     const processor = new FailingProcessor<{ position: number }>();
@@ -21,7 +21,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
   });
 
   test('jobs with more than 1 attempts are rescheduled', async () => {
-    const queue = tester.getKujob().createQueue({ name: 'myqueue' });
+    const queue = await tester.getKujob().createQueue({ name: 'myqueue' });
     const { id: jobId } = await queue.addJob(queue.createJob({}).attempts(2));
 
     const processor = new FailingProcessor<{ position: number }>();
@@ -35,7 +35,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
   });
 
   test('jobs are processed no more than the number of attempts', async () => {
-    const queue = tester.getKujob().createQueue({ name: 'myqueue' });
+    const queue = await tester.getKujob().createQueue({ name: 'myqueue' });
     const { id: jobId } = await queue.addJob(queue.createJob({}).attempts(3));
 
     const processor = new FailingProcessor<{ position: number }>();

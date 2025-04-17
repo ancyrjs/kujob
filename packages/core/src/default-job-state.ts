@@ -4,6 +4,8 @@ import { ScheduleStrategy } from './schedule/schedule-strategy.js';
 
 export type DefaultJobState<T extends BaseJobData = BaseJobData> = {
   id: string;
+  queueId: string;
+  workerId: string | null;
   data: T;
   attemptsMax: number;
   attemptsDone: number;

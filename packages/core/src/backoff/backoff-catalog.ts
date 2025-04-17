@@ -3,6 +3,7 @@ import { AsapBackoff } from './asap-backoff.js';
 import { FixedBackoff } from './fixed-backoff.js';
 import { LinearBackoff } from './linear-backoff.js';
 import { ExponentialBackoff } from './exponential-backoff.js';
+import { Optional } from '../utils/optional.js';
 
 export interface BackoffConstructor<
   T extends BackoffStrategy = BackoffStrategy,
@@ -39,7 +40,14 @@ export class BackoffCatalog {
    * Match serialized data to a backoff object.
    * @param data
    */
-  static deserialize(data: object): BackoffConstructor | null {
-    return this.Options.find((option) => option.deserializable(data)) ?? null;
+  static deserialize(data: object): Optional<BackoffStrategy> {
+    const constructor =
+      this.Options.find((option) => option.deserializable(data)) ?? null;
+
+    if (!constructor) {
+      return Optional.none();
+    }
+
+    return Optional.some(constructor.deserialize(data));
   }
 }

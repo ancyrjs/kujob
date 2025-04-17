@@ -1,4 +1,4 @@
-import { FailingProcessor, SpyProcessor } from '@ancyrjs/kujob-testutils';
+import { FailingProcessor, SpyProcessor } from '@racyn/kujob-testutils';
 import { getTestedDrivers } from './config/tested-drivers.js';
 
 describe.each(getTestedDrivers())('%s', (tester) => {
@@ -8,7 +8,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
   afterEach(() => tester.afterEach());
 
   const createJob = async () => {
-    const queue = tester.getKujob().createQueue({ name: 'myqueue' });
+    const queue = await tester.getKujob().createQueue({ name: 'myqueue' });
     const job = queue.createJob({ value: 1 });
     const { id } = await job.save();
 
@@ -79,7 +79,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
   describe('long running', () => {
     test('adding jobs after the processor started', async () => {
-      const queue = tester.getKujob().createQueue({ name: 'myqueue' });
+      const queue = await tester.getKujob().createQueue({ name: 'myqueue' });
 
       const processor = new SpyProcessor();
       queue.setProcessor(processor);

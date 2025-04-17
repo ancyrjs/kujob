@@ -25,7 +25,7 @@ export interface BackoffStrategy {
    * to be stored in database without the database knowing
    * the concrete implementation.
    */
-  serialize(): object;
+  serialize(): object | null;
 
   /**
    * Determines when to run the job after it failed

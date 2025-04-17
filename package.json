@@ -1,14 +1,19 @@
 {
-  "name": "@ancyrjs/kujob-root",
+  "name": "@racyn/kujob-root",
   "version": "0.0.1",
   "description": "",
   "keywords": [],
   "author": "Anthony Cyrille",
   "license": "MIT",
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "dev": "pnpx concurrently \"pnpm --filter=kujob-core dev\" \"pnpm --filter=kujob-in-memory dev\" \"pnpm --filter=kujob-postgresql dev\" \"pnpm --filter=kujob-testutils dev\"",
+    "build": "pnpm --filter=kujob-core build && pnpm --filter=kujob-in-memory build && pnpm --filter=kujob-postgresql build && pnpm --filter=kujob-testutils build"
+  },
   "devDependencies": {
-    "prettier": "^3.5.3"
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.9"
   },
   "packageManager": "pnpm@10.6.1"
 }

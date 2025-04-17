@@ -12,7 +12,7 @@ export class Kujob {
     return this.driver as T;
   }
 
-  createQueue(params: CreateQueueParams): Queue {
+  createQueue(params: CreateQueueParams): Promise<Queue> {
     return this.driver.createQueue(params);
   }
 }

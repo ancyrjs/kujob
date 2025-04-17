@@ -1,5 +1,5 @@
 {
-  "name": "@ancyrjs/kujob-core",
+  "name": "@racyn/kujob-core",
   "version": "0.0.1",
   "description": "",
   "keywords": [],
@@ -9,6 +9,7 @@
   "type": "module",
   "scripts": {
     "build": "rimraf build && tsc --build",
+    "dev": "tsc --build --watch",
     "test": "vitest run",
     "coverage": "vitest run --coverage"
   },

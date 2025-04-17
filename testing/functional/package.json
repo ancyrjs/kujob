@@ -1,5 +1,5 @@
 {
-  "name": "@ancyrjs/kujob-testing-functional",
+  "name": "@racyn/kujob-testing-functional",
   "version": "0.0.1",
   "description": "",
   "keywords": [],
@@ -11,11 +11,13 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@ancyrjs/kujob-core": "workspace:*",
-    "@ancyrjs/kujob-in-memory": "workspace:*",
-    "@ancyrjs/kujob-testutils": "workspace:*",
+    "@racyn/kujob-core": "workspace:*",
+    "@racyn/kujob-in-memory": "workspace:*",
+    "@racyn/kujob-postgresql": "workspace:*",
+    "@racyn/kujob-testutils": "workspace:*",
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.11.9",
+    "@testcontainers/postgresql": "^10.18.0",
     "@types/node": "^22.13.1",
     "prettier": "^3.5.3",
     "typescript": "^5.8.2",

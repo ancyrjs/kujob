@@ -1,4 +1,4 @@
-import { SpyProcessor } from '@ancyrjs/kujob-testutils';
+import { SpyProcessor } from '@racyn/kujob-testutils';
 import { getTestedDrivers } from './config/tested-drivers.js';
 
 describe.each(getTestedDrivers())('%s', (tester) => {
@@ -8,7 +8,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
   afterEach(() => tester.afterEach());
 
   test('jobs run from oldest to newest', async () => {
-    const queue = tester.getKujob().createQueue({ name: 'myqueue' });
+    const queue = await tester.getKujob().createQueue({ name: 'myqueue' });
     await queue.addJobs([
       queue.createJob({ position: 1 }),
       queue.createJob({ position: 2 }),
@@ -29,7 +29,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
   });
 
   test('jobs run in priority order', async () => {
-    const queue = tester.getKujob().createQueue({ name: 'myqueue' });
+    const queue = await tester.getKujob().createQueue({ name: 'myqueue' });
     await queue.addJobs([
       queue.createJob({ position: 1 }).priority(1),
       queue.createJob({ position: 2 }).priority(2),
@@ -50,7 +50,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
   });
 
   test('jobs of the same priority run from oldest to newest', async () => {
-    const queue = tester.getKujob().createQueue({ name: 'myqueue' });
+    const queue = await tester.getKujob().createQueue({ name: 'myqueue' });
     await queue.addJobs([
       queue.createJob({ position: 1 }).priority(1),
       queue.createJob({ position: 2 }).priority(3),

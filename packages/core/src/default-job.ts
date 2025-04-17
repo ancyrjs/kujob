@@ -10,6 +10,7 @@ export class DefaultJob<T extends BaseJobData> implements Job<T> {
   static fromSpec(
     spec: JobSpec,
     props: {
+      queueId: string;
       dateProvider: DateProvider;
     },
   ) {
@@ -18,6 +19,8 @@ export class DefaultJob<T extends BaseJobData> implements Job<T> {
     return new DefaultJob({
       state: {
         id: spec.id ?? randomUuid(),
+        queueId: props.queueId,
+        workerId: null,
         data: spec.data,
         priority: spec.priority,
         attemptsDone: 0,
@@ -100,9 +103,14 @@ export class DefaultJob<T extends BaseJobData> implements Job<T> {
     return this.state;
   }
 
-  acquire() {
+  acquire({ workerId }: { workerId: string }) {
     this.state.status = 'processing';
     this.state.startedAt = this.dateProvider.getDate();
+    this.state.workerId = workerId;
+  }
+
+  release() {
+    this.state.workerId = null;
   }
 
   async complete(): Promise<void> {

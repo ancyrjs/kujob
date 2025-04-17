@@ -1,5 +1,5 @@
 {
-  "name": "@ancyrjs/kujob-testutils",
+  "name": "@racyn/kujob-testutils",
   "version": "0.0.1",
   "description": "",
   "keywords": [],
@@ -8,10 +8,11 @@
   "main": "build/index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "dev": "tsc --build --watch"
   },
   "dependencies": {
-    "@ancyrjs/kujob-core": "workspace:*"
+    "@racyn/kujob-core": "workspace:*"
   },
   "devDependencies": {
     "@swc/cli": "^0.6.0",

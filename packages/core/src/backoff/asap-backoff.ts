@@ -1,9 +1,6 @@
-import { isObj } from '../utils/validation.js';
 import { BackoffStrategy, ScheduleForParams } from './backoff-strategy.js';
 
-type Serialized = {
-  type: 'asap';
-};
+type Serialized = null;
 
 /**
  * Rerun the job as soon as possible.
@@ -11,8 +8,8 @@ type Serialized = {
 export class AsapBackoff implements BackoffStrategy {
   static INSTANCE = new AsapBackoff();
 
-  static deserializable(data: object): data is Serialized {
-    return isObj(data) && 'type' in data && data['type'] === 'asap';
+  static deserializable(data: any): data is Serialized {
+    return data === null;
   }
 
   static deserialize(data: Serialized) {
@@ -20,9 +17,7 @@ export class AsapBackoff implements BackoffStrategy {
   }
 
   serialize(): Serialized {
-    return {
-      type: 'asap',
-    };
+    return null;
   }
 
   scheduleFor(params: ScheduleForParams): Date {

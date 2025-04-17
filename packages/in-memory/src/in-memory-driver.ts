@@ -6,7 +6,7 @@ import {
   Looper,
   Queue,
   TimeoutLooper,
-} from '@ancyrjs/kujob-core';
+} from '@racyn/kujob-core';
 import { InMemoryQueue } from './in-memory-queue.js';
 
 export class InMemoryDriver implements Driver {
@@ -18,7 +18,11 @@ export class InMemoryDriver implements Driver {
     this.dateProvider = props?.dateProvider ?? CurrentDateProvider.INSTANCE;
   }
 
-  createQueue(params: CreateQueueParams): Queue {
+  async start() {}
+  async purge() {}
+  async end() {}
+
+  async createQueue(params: CreateQueueParams): Promise<Queue> {
     return new InMemoryQueue({
       params,
       jobsLooper: this.looper.clone(),

@@ -3,8 +3,8 @@ import {
   Duration,
   Queue,
   ScheduleStrategy,
-} from '@ancyrjs/kujob-core';
-import { SpyProcessor } from '@ancyrjs/kujob-testutils';
+} from '@racyn/kujob-core';
+import { SpyProcessor } from '@racyn/kujob-testutils';
 import { getTestedDrivers } from './config/tested-drivers.js';
 
 import { Tester } from './config/tester.js';
@@ -57,7 +57,7 @@ class TestDriver {
   constructor(private readonly tester: Tester) {}
 
   async setup({ schedule }: { schedule: ScheduleStrategy | null }) {
-    this.queue = this.tester.getKujob().createQueue({ name: 'myqueue' });
+    this.queue = await this.tester.getKujob().createQueue({ name: 'myqueue' });
     const job = this.queue.createJob({});
 
     if (schedule) {
