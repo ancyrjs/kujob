@@ -18,17 +18,11 @@ export interface Tester {
 }
 
 export abstract class BaseTester implements Tester {
-  async beforeAll(): Promise<void> {
-    await this.getKujob().getDriver().start();
-  }
+  async beforeAll(): Promise<void> {}
 
-  async beforeEach(): Promise<void> {
-    await this.getKujob().getDriver().purge();
-  }
+  async beforeEach(): Promise<void> {}
 
-  async afterAll(): Promise<void> {
-    await this.getKujob().getDriver().end();
-  }
+  async afterAll(): Promise<void> {}
 
   async afterEach(): Promise<void> {}
 

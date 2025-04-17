@@ -1,10 +1,10 @@
-import { BaseJobData, BuiltJob, JobSpec, NonAcquiredJob } from './job.js';
+import { BuiltJob, JobData, JobSpec, NonAcquiredJob } from './job-contract.js';
 import { Processor } from './processor.js';
 import { JobBuilder } from './job-builder.js';
 import { Looper } from './looper/looper.js';
 
 export interface Queue {
-  createJob<T extends BaseJobData>(data: T): JobBuilder;
+  createJob<T extends JobData>(data: T): JobBuilder;
 
   addJob(job: JobBuilder): Promise<BuiltJob>;
 
@@ -14,7 +14,7 @@ export interface Queue {
 
   setProcessor(processor: Processor<any>): void;
 
-  readJob<T extends BaseJobData>(id: string): Promise<NonAcquiredJob<T> | null>;
+  readJob<T extends JobData>(id: string): Promise<NonAcquiredJob<T> | null>;
 
   startProcessing(): void;
 

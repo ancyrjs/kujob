@@ -1,4 +1,13 @@
 import { FailingProcessor } from '@racyn/kujob-testutils';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from 'vitest';
 import { getTestedDrivers } from './config/tested-drivers.js';
 
 describe.each(getTestedDrivers())('%s', (tester) => {

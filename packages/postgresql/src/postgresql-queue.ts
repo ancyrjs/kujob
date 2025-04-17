@@ -1,11 +1,11 @@
 import {
   BackoffCatalog,
-  BaseJobData,
   BuiltJob,
   CreateQueueParams,
   DateProvider,
-  DefaultJob,
+  Job,
   JobBuilder,
+  JobData,
   JobSpec,
   Looper,
   NonAcquiredJob,
@@ -19,7 +19,6 @@ import { AddJobsCommand } from './add-jobs-command.js';
 
 export class PostgresqlQueue implements Queue {
   private name: string;
-  private queueId: string | null = null;
   private workerId = randomUuid();
   private processor: Processor | null = null;
   private jobsLooper: Looper;
@@ -33,6 +32,7 @@ export class PostgresqlQueue implements Queue {
     dateProvider: DateProvider;
   }) {
     this.name = props.params.name;
+    this.pool = props.pool;
     this.jobsLooper = props.jobsLooper;
     this.dateProvider = props.dateProvider;
     this.jobsLooper.configure(() => this.processJobs());
@@ -40,16 +40,14 @@ export class PostgresqlQueue implements Queue {
 
   async initialize(): Promise<void> {
     await this.pool.transaction(async (client) => {
-      const queueResult = await client.query(
-        'INSERT INTO job_queues (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = $1 RETURNING id',
+      await client.query(
+        'INSERT INTO job_queues (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = $1',
         [this.name],
       );
-
-      this.queueId = queueResult.rows[0].id;
     });
   }
 
-  createJob<T extends BaseJobData>(data: T): JobBuilder {
+  createJob<T extends JobData>(data: T): JobBuilder {
     return new JobBuilder({
       data,
       queue: this,
@@ -59,7 +57,7 @@ export class PostgresqlQueue implements Queue {
   async addJob(job: JobBuilder): Promise<BuiltJob> {
     const result = await new AddJobsCommand({
       pool: this.pool,
-      queueId: this.queueId,
+      queueName: this.name,
       dateProvider: this.dateProvider,
     }).execute([job.build()]);
 
@@ -69,7 +67,7 @@ export class PostgresqlQueue implements Queue {
   addJobs(jobs: JobBuilder[]): Promise<BuiltJob[]> {
     return new AddJobsCommand({
       pool: this.pool,
-      queueId: this.queueId,
+      queueName: this.name,
       dateProvider: this.dateProvider,
     }).execute(jobs.map((job) => job.build()));
   }
@@ -77,14 +75,14 @@ export class PostgresqlQueue implements Queue {
   async addJobSpec(job: JobSpec): Promise<BuiltJob> {
     const result = await new AddJobsCommand({
       pool: this.pool,
-      queueId: this.queueId,
+      queueName: this.name,
       dateProvider: this.dateProvider,
     }).execute([job]);
 
     return result[0];
   }
 
-  async readJob<T extends BaseJobData>(
+  async readJob<T extends JobData>(
     id: string,
   ): Promise<NonAcquiredJob<T> | null> {
     const result = await this.pool.query(async (client) =>
@@ -120,7 +118,7 @@ export class PostgresqlQueue implements Queue {
   }
 
   private async processJobs(): Promise<void> {
-    const processor = this.processor;
+    const processor = this.processor!;
     const result = await this.pool.transaction(async (client) => {
       const jobsToFetch = 100;
       return client.query(
@@ -131,14 +129,14 @@ export class PostgresqlQueue implements Queue {
              worker_id = $1
          WHERE id IN (
            SELECT id FROM jobs 
-           WHERE queue_id = $2 AND status = 'pending'
-           AND (scheduled_for <= NOW())
-           ORDER BY priority DESC, enqueued_at ASC
+           WHERE queue_name = $2 AND status = 'pending'
+           AND (scheduled_at <= NOW())
+           ORDER BY priority DESC, created_at ASC
            FOR UPDATE SKIP LOCKED
            LIMIT $3
          )
          RETURNING *`,
-        [this.workerId, this.queueId, jobsToFetch],
+        [this.workerId, this.name, jobsToFetch],
       );
     });
 
@@ -160,11 +158,11 @@ export class PostgresqlQueue implements Queue {
       });
   }
 
-  private sqlToJobData<T>(result: any): DefaultJob<T> {
-    return new DefaultJob({
+  private sqlToJobData<T extends JobData>(result: any): Job<T> {
+    return new Job({
       state: {
         id: result.id,
-        queueId: result.queue_id,
+        queueName: result.queue_name,
         workerId: result.worker_id,
         attemptsMax: result.attempts_max,
         attemptsDone: result.attempts_done,
@@ -175,7 +173,7 @@ export class PostgresqlQueue implements Queue {
           'Unrecognized backoff',
         ),
         schedule: ScheduleCatalog.deserialize(result.schedule).getOrThrow(
-          'Unrecognized backoff',
+          'Unrecognized schedule',
         ),
         createdAt: result.created_at,
         startedAt: result.started_at,
@@ -188,7 +186,7 @@ export class PostgresqlQueue implements Queue {
     });
   }
 
-  private async saveJob(job: DefaultJob<any>) {
+  private async saveJob(job: Job<any>) {
     const state = job.getState();
     await this.pool.transaction(async (client) => {
       await client.query(

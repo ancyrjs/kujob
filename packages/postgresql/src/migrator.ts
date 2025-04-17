@@ -19,8 +19,7 @@ export class DefaultMigrator implements Migrator {
     await this.pool.query(`
         CREATE TABLE IF NOT EXISTS job_queues
         (
-            id         UUID PRIMARY KEY,
-            name       VARCHAR(100) UNIQUE NOT NULL,
+            name       VARCHAR(100) PRIMARY KEY,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         )
     `);
@@ -29,7 +28,7 @@ export class DefaultMigrator implements Migrator {
         CREATE TABLE IF NOT EXISTS jobs
         (
             id              UUID PRIMARY KEY,
-            queue_id        INTEGER REFERENCES job_queues (id) NOT NULL,
+            queue_name      VARCHAR(100) REFERENCES job_queues (name) NOT NULL,
             worker_id       VARCHAR(100)                       NULL,
             attempts_max    INTEGER                            NOT NULL DEFAULT 1,
             attempts_done   INTEGER                            NOT NULL DEFAULT 0,
@@ -63,7 +62,7 @@ export class DefaultMigrator implements Migrator {
     `);
 
     await this.pool.query(`
-        CREATE INDEX IF NOT EXISTS idx_jobs_queue_status ON jobs (queue_id, status);
+        CREATE INDEX IF NOT EXISTS idx_jobs_queue_status ON jobs (queue_name, status);
     `);
   }
 

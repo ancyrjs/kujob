@@ -26,15 +26,15 @@ export { ScheduleStrategy } from './schedule/schedule-strategy.js';
 
 export { Driver, CreateQueueParams } from './driver.js';
 export {
-  Job,
+  AcquiredJob,
   NonAcquiredJob,
   JobSpec,
   JobStatus,
-  BaseJobData,
+  JobData,
   BuiltJob,
-} from './job.js';
-export { DefaultJob } from './default-job.js';
-export { DefaultJobState } from './default-job-state.js';
+} from './job-contract.js';
+export { Job } from './job.js';
+export { JobState } from './job-state.js';
 export { JobBuilder } from './job-builder.js';
 export { Processor } from './processor.js';
 export { Queue } from './queue.js';

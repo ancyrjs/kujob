@@ -5,6 +5,15 @@ import {
   ScheduleStrategy,
 } from '@racyn/kujob-core';
 import { SpyProcessor } from '@racyn/kujob-testutils';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from 'vitest';
 import { getTestedDrivers } from './config/tested-drivers.js';
 
 import { Tester } from './config/tester.js';
@@ -15,7 +24,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
   afterAll(() => tester.afterAll());
   afterEach(() => tester.afterEach());
 
-  describe('asap', () => {
+  describe.only('asap', () => {
     test('job runs as soon as possible by default', async () => {
       const driver = new TestDriver(tester);
       await driver.setup({ schedule: null });

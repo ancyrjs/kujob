@@ -1,7 +1,7 @@
-import { BaseJobData, Job } from './job.js';
+import { AcquiredJob, JobData } from './job-contract.js';
 
-export interface Processor<T extends BaseJobData = any> {
-  process(job: Job<T>): Promise<void>;
+export interface Processor<T extends JobData = any> {
+  process(job: AcquiredJob<T>): Promise<void>;
 
   getConcurrency(): number;
 }

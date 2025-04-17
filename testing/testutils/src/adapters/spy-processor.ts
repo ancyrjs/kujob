@@ -1,13 +1,13 @@
-import { BaseJobData, Job, Processor } from '@racyn/kujob-core';
+import { AcquiredJob, JobData, Processor } from '@racyn/kujob-core';
 
-type JobInfo<T extends BaseJobData> = {
+type JobInfo<T extends JobData> = {
   data: T;
   at: Date;
 };
-export class SpyProcessor<T extends BaseJobData = any> implements Processor {
+export class SpyProcessor<T extends JobData = any> implements Processor {
   private jobs: JobInfo<T>[] = [];
 
-  async process(job: Job<T>): Promise<void> {
+  async process(job: AcquiredJob<T>): Promise<void> {
     this.jobs.push({
       data: job.getData(),
       at: new Date(),

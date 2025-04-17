@@ -1,11 +1,11 @@
-import { BaseJobData, BuiltJob, JobSpec } from './job.js';
+import { BuiltJob, JobData, JobSpec } from './job-contract.js';
 import { Queue } from './queue.js';
 import { ScheduleStrategy } from './schedule/schedule-strategy.js';
 import { AsapSchedule } from './schedule/asap-schedule.js';
 import { AsapBackoff } from './backoff/asap-backoff.js';
 import { BackoffStrategy } from './backoff/backoff-strategy.js';
 
-export class JobBuilder<T extends BaseJobData = BaseJobData> {
+export class JobBuilder<T extends JobData = JobData> {
   private state: JobSpec<T>;
   private queue: Queue;
 

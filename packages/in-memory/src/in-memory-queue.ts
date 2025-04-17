@@ -1,12 +1,12 @@
 import {
-  BaseJobData,
   BuiltJob,
   CreateQueueParams,
   DateProvider,
-  DefaultJob,
-  DefaultJobState,
+  Job,
   JobBuilder,
+  JobData,
   JobSpec,
+  JobState,
   Looper,
   NonAcquiredJob,
   Processor,
@@ -18,7 +18,7 @@ export class InMemoryQueue implements Queue {
   private name: string;
   private queueId = randomUuid();
   private workerId = randomUuid();
-  private queue: DefaultJobState[] = [];
+  private queue: JobState[] = [];
   private processor: Processor | null = null;
   private jobsLooper: Looper;
   private dateProvider: DateProvider;
@@ -39,7 +39,7 @@ export class InMemoryQueue implements Queue {
     return this.name;
   }
 
-  createJob<T extends BaseJobData>(data: T): JobBuilder {
+  createJob<T extends JobData>(data: T): JobBuilder {
     return new JobBuilder({
       data,
       queue: this,
@@ -63,7 +63,8 @@ export class InMemoryQueue implements Queue {
   }
 
   async addJobSpec(spec: JobSpec): Promise<BuiltJob> {
-    const job = DefaultJob.fromSpec(spec, {
+    const job = Job.fromSpec({
+      spec,
       queueId: this.queueId,
       dateProvider: this.dateProvider,
     });
@@ -75,7 +76,7 @@ export class InMemoryQueue implements Queue {
     };
   }
 
-  async readJob<T extends BaseJobData>(
+  async readJob<T extends JobData>(
     id: string,
   ): Promise<NonAcquiredJob<T> | null> {
     const entry = this.queue.find((job) => job.id === id);
@@ -83,8 +84,8 @@ export class InMemoryQueue implements Queue {
       return null;
     }
 
-    return new DefaultJob({
-      state: entry as DefaultJobState<T>,
+    return new Job({
+      state: entry as JobState<T>,
       dateProvider: this.dateProvider,
     });
   }
@@ -124,7 +125,7 @@ export class InMemoryQueue implements Queue {
 
     // Process jobs
     for (const state of jobsToProcess) {
-      const acquiredJob = new DefaultJob({
+      const acquiredJob = new Job({
         state,
         dateProvider: this.dateProvider,
       });

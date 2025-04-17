@@ -5,6 +5,15 @@ import {
   Queue,
 } from '@racyn/kujob-core';
 import { expectDate, FailingProcessor } from '@racyn/kujob-testutils';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from 'vitest';
 import { getTestedDrivers } from './config/tested-drivers.js';
 import { Tester } from './config/tester.js';
 

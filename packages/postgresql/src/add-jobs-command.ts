@@ -3,9 +3,9 @@ import {
   BuiltJob,
   CurrentDateProvider,
   DateProvider,
-  DefaultJob,
-  DefaultJobState,
+  Job,
   JobSpec,
+  JobState,
 } from '@racyn/kujob-core';
 
 /**
@@ -15,18 +15,18 @@ export class AddJobsCommand {
   static DEFAULT_CHUNK_SIZE = 1000;
 
   private pool: Pool;
-  private queueId: string;
+  private queueName: string;
   private chunkSize: number;
   private dateProvider: DateProvider;
 
   constructor(props: {
     pool: Pool;
-    queueId: string;
+    queueName: string;
     chunkSize?: number;
     dateProvider?: DateProvider;
   }) {
     this.pool = props.pool;
-    this.queueId = props.queueId;
+    this.queueName = props.queueName;
     this.chunkSize = props.chunkSize ?? AddJobsCommand.DEFAULT_CHUNK_SIZE;
     this.dateProvider = props.dateProvider ?? CurrentDateProvider.INSTANCE;
   }
@@ -59,9 +59,10 @@ export class AddJobsCommand {
    * @param spec
    * @private
    */
-  private createJob(spec: JobSpec): DefaultJobState {
-    return DefaultJob.fromSpec(spec, {
-      queueId: this.queueId,
+  private createJob(spec: JobSpec): JobState {
+    return Job.fromSpec({
+      spec,
+      queueId: this.queueName,
       dateProvider: this.dateProvider,
     }).getState();
   }
@@ -87,24 +88,26 @@ export class AddJobsCommand {
    * @param jobs
    * @private
    */
-  private toInsertQuery(jobs: DefaultJobState[]) {
+  private toInsertQuery(jobs: JobState[]) {
     const valueStrings = [];
     const queryParams: any[] = [];
     let paramIndex = 1;
 
     for (const job of jobs) {
       valueStrings.push(
-        `(`,
-        `$${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, `,
-        `$${paramIndex + 5}, $${paramIndex + 6}, $${paramIndex + 7}, $${paramIndex + 8}, $${paramIndex + 9}, `,
-        `$${paramIndex + 10}, $${paramIndex + 11}, $${paramIndex + 12}, $${paramIndex + 13}, $${paramIndex + 14}, `,
-        `$${paramIndex + 15}`,
-        `)`,
+        [
+          `(`,
+          `$${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, `,
+          `$${paramIndex + 5}, $${paramIndex + 6}, $${paramIndex + 7}, $${paramIndex + 8}, $${paramIndex + 9}, `,
+          `$${paramIndex + 10}, $${paramIndex + 11}, $${paramIndex + 12}, $${paramIndex + 13}, $${paramIndex + 14}, `,
+          `$${paramIndex + 15}`,
+          `)`,
+        ].join(''),
       );
 
       queryParams.push(
         job.id,
-        this.queueId,
+        this.queueName,
         null,
         job.attemptsMax,
         job.attemptsDone,

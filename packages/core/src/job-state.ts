@@ -1,10 +1,10 @@
-import { BaseJobData, JobStatus } from './job.js';
+import { JobData, JobStatus } from './job-contract.js';
 import { BackoffStrategy } from './backoff/backoff-strategy.js';
 import { ScheduleStrategy } from './schedule/schedule-strategy.js';
 
-export type DefaultJobState<T extends BaseJobData = BaseJobData> = {
+export type JobState<T extends JobData = JobData> = {
   id: string;
-  queueId: string;
+  queueName: string;
   workerId: string | null;
   data: T;
   attemptsMax: number;

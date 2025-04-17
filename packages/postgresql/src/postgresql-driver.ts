@@ -19,16 +19,21 @@ export class PostgresqlDriver implements Driver {
   private dateProvider: DateProvider;
   private migrator: Migrator;
 
-  constructor(props?: {
+  constructor({
+    poolFactory,
+    looper,
+    dateProvider,
+    migrator,
+  }: {
+    poolFactory: PoolFactory;
     looper?: Looper;
     dateProvider?: DateProvider;
-    poolFactory: PoolFactory;
     migrator?: Migrator;
   }) {
-    this.pool = props.poolFactory.createPool();
-    this.looper = props?.looper ?? new TimeoutLooper();
-    this.dateProvider = props?.dateProvider ?? CurrentDateProvider.INSTANCE;
-    this.migrator = props.migrator ?? new DefaultMigrator({ pool: this.pool });
+    this.pool = poolFactory.createPool();
+    this.looper = looper ?? new TimeoutLooper();
+    this.dateProvider = dateProvider ?? CurrentDateProvider.INSTANCE;
+    this.migrator = migrator ?? new DefaultMigrator({ pool: this.pool });
   }
 
   async scaffold() {
