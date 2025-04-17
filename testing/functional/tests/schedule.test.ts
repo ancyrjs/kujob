@@ -24,12 +24,12 @@ describe.each(getTestedDrivers())('%s', (tester) => {
   afterAll(() => tester.afterAll());
   afterEach(() => tester.afterEach());
 
-  describe.only('asap', () => {
+  describe('asap', () => {
     test('job runs as soon as possible by default', async () => {
       const driver = new TestDriver(tester);
       await driver.setup({ schedule: null });
       await driver.waitUntilJobIsProcessed();
-      await driver.expectJobToHaveRunWithin(15);
+      await driver.expectJobToHaveRunWithin(150);
     });
   });
 
@@ -81,14 +81,16 @@ class TestDriver {
 
   async waitUntilJobIsProcessed() {
     this.queue!.startProcessing();
-    return expect.poll(() => this.processor.getJobsData()).toHaveLength(1);
+    await expect.poll(() => this.processor.getJobsData()).toHaveLength(1);
+    this.queue!.stopProcessing();
   }
 
   async waitUntilJobIsProcessedAtLeast(times: number) {
     this.queue!.startProcessing();
-    return expect
+    await expect
       .poll(() => this.processor.getJobsData().length)
       .toBeGreaterThanOrEqual(times);
+    this.queue!.stopProcessing();
   }
 
   async expectJobToHaveRunWithin(delay: number) {

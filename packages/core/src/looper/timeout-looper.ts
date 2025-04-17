@@ -27,7 +27,7 @@ export class TimeoutLooper implements Looper {
   }
 
   async stop() {
-    this.running = true;
+    this.running = false;
 
     if (this.timeoutHandle) {
       clearTimeout(this.timeoutHandle);
@@ -40,9 +40,13 @@ export class TimeoutLooper implements Looper {
       return;
     }
 
+    if (!this.running) {
+      return;
+    }
+
     await this.runnable();
     if (this.running === true) {
-      this.timeoutHandle = setTimeout(this.doRun.bind(this), 16);
+      this.timeoutHandle = setTimeout(this.doRun.bind(this), this.timeoutDelay);
     }
   }
 }

@@ -58,6 +58,8 @@ describe.each(getTestedDrivers())('%s', (tester) => {
       })
       .toBe(true);
 
+    queue.stopProcessing();
+
     expect(processor.getJobsData()).toHaveLength(3);
   });
 });

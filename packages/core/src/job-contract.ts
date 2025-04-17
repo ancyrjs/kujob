@@ -13,6 +13,7 @@ export type JobStatus = 'waiting' | 'processing' | 'completed' | 'failed';
 export interface NonAcquiredJob<T extends JobData = JobData> {
   getId(): string;
   getData(): T;
+  getState(): any;
   isWaiting(): boolean;
   isProcessing(): boolean;
   isCompleted(): boolean;

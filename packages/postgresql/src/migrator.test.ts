@@ -27,6 +27,11 @@ beforeAll(async () => {
   migrator = new DefaultMigrator({ pool });
 });
 
+afterAll(async () => {
+  await pool.end();
+  await container.stop();
+});
+
 test('scaffolding', async () => {
   await migrator.scaffold();
 
@@ -48,9 +53,4 @@ test('dropping', async () => {
   );
 
   expect(tables.rowCount).toBe(0);
-});
-
-afterAll(async () => {
-  await pool.end();
-  await container.stop();
 });

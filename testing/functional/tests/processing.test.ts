@@ -97,6 +97,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
       await queue.addJob(queue.createJob({ value: 1 }));
 
       await expect.poll(() => processor.getJobsData()).toHaveLength(1);
+      queue.stopProcessing();
     });
   });
 });

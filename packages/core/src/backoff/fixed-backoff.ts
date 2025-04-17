@@ -14,7 +14,7 @@ export class FixedBackoff implements BackoffStrategy {
   private duration: Duration;
 
   static deserializable(data: object): data is Serialized {
-    return isObj(data) && 'type' in data && data['type'] === 'delay';
+    return isObj(data) && 'type' in data && data['type'] === 'fixed';
   }
 
   static deserialize(data: Serialized) {

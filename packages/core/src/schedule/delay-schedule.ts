@@ -18,7 +18,7 @@ export class DelaySchedule implements ScheduleStrategy {
 
   constructor(props: { duration: Duration; repeat?: boolean }) {
     this.duration = props.duration;
-    this.repeat = props.repeat ?? false;
+    this.repeat = props?.repeat === true;
   }
 
   static deserializable(data: object): data is Serialized {
@@ -26,7 +26,10 @@ export class DelaySchedule implements ScheduleStrategy {
   }
 
   static deserialize(data: Serialized) {
-    return new DelaySchedule({ duration: Duration.milliseconds(data.ms) });
+    return new DelaySchedule({
+      duration: Duration.milliseconds(data.ms),
+      repeat: data.repeat,
+    });
   }
 
   serialize(): Serialized {

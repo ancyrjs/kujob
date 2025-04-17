@@ -86,7 +86,7 @@ export class PostgresqlQueue implements Queue {
     id: string,
   ): Promise<NonAcquiredJob<T> | null> {
     const result = await this.pool.query(async (client) =>
-      client.query(`SELECT * FROM jobs WHERE id = $1`),
+      client.query(`SELECT * FROM jobs WHERE id = $1`, [id]),
     );
 
     if (result.rowCount === 0) {
@@ -129,7 +129,7 @@ export class PostgresqlQueue implements Queue {
              worker_id = $1
          WHERE id IN (
            SELECT id FROM jobs 
-           WHERE queue_name = $2 AND status = 'pending'
+           WHERE queue_name = $2 AND status = 'waiting'
            AND (scheduled_at <= NOW())
            ORDER BY priority DESC, created_at ASC
            FOR UPDATE SKIP LOCKED
@@ -175,11 +175,11 @@ export class PostgresqlQueue implements Queue {
         schedule: ScheduleCatalog.deserialize(result.schedule).getOrThrow(
           'Unrecognized schedule',
         ),
-        createdAt: result.created_at,
-        startedAt: result.started_at,
-        scheduledAt: result.scheduled_at,
-        updatedAt: result.updated_at,
-        finishedAt: result.finished_at,
+        createdAt: this.dateOrThrow(result.created_at),
+        startedAt: this.dateOrNull(result.started_at),
+        scheduledAt: this.dateOrThrow(result.scheduled_at),
+        updatedAt: this.dateOrNull(result.updated_at),
+        finishedAt: this.dateOrNull(result.finished_at),
         failureReason: result.failure_reason,
       },
       dateProvider: this.dateProvider,
@@ -223,5 +223,17 @@ export class PostgresqlQueue implements Queue {
         ],
       );
     });
+  }
+
+  private dateOrNull(value: string | null): Date | null {
+    return value ? new Date(value) : null;
+  }
+
+  private dateOrThrow(value: string | null): Date {
+    if (!value) {
+      throw new Error('Date value is null');
+    }
+
+    return new Date(value);
   }
 }

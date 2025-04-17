@@ -48,6 +48,10 @@ export class PostgresqlDriver implements Driver {
     return this.pool.end();
   }
 
+  getPool() {
+    return new Pool({ pool: this.pool });
+  }
+
   async createQueue(params: CreateQueueParams): Promise<Queue> {
     const queue = new PostgresqlQueue({
       params,
