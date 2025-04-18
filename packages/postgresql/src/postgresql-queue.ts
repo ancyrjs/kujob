@@ -16,6 +16,7 @@ import {
 } from '@racyn/kujob-core';
 import { Pool } from './pool.js';
 import { AddJobsCommand } from './add-jobs-command.js';
+import { PoolClient } from 'pg';
 
 export class PostgresqlQueue implements Queue {
   private name: string;
@@ -118,44 +119,64 @@ export class PostgresqlQueue implements Queue {
   }
 
   private async processJobs(): Promise<void> {
-    const processor = this.processor!;
+    const jobsToFetch = 100;
+
     const result = await this.pool.transaction(async (client) => {
-      const jobsToFetch = 100;
-      return client.query(
-        `UPDATE jobs 
+      // Use the same transaction boundary to update the heartbeat of the worker
+      await this.heartbeat(client);
+
+      const allJobs = await client.query(
+        `SELECT * FROM jobs
+         WHERE queue_name = $1
+           AND status = 'waiting'
+           AND (scheduled_at <= NOW())
+         ORDER BY priority DESC, scheduled_at ASC
+         FOR UPDATE SKIP LOCKED
+         LIMIT $2`,
+        [this.name, jobsToFetch],
+      );
+
+      const jobIds = allJobs.rows.map((row) => row.id);
+
+      if (jobIds.length > 0) {
+        await client.query(
+          `UPDATE jobs 
          SET status = 'processing', 
              updated_at = NOW(), 
              started_at = NOW(), 
              worker_id = $1
-         WHERE id IN (
-           SELECT id FROM jobs 
-           WHERE queue_name = $2 AND status = 'waiting'
-           AND (scheduled_at <= NOW())
-           ORDER BY priority DESC, created_at ASC
-           FOR UPDATE SKIP LOCKED
-           LIMIT $3
-         )
-         RETURNING *`,
-        [this.workerId, this.name, jobsToFetch],
-      );
+            WHERE id = ANY($2)`,
+          [this.workerId, jobIds],
+        );
+      }
+
+      return allJobs;
     });
 
-    result.rows
-      .map((row) => this.sqlToJobData(row))
-      .forEach((job) => {
-        setImmediate(async () => {
-          try {
-            await processor.process(job);
-            await job.complete();
-          } catch (e) {
-            await job.fail(e);
-          } finally {
-            job.release();
-          }
+    await Promise.all(
+      result.rows
+        .map((row) => this.sqlToJobData(row))
+        .map(
+          (job) =>
+            new Promise<void>((resolve) =>
+              setImmediate(async () => {
+                job.acquire({ workerId: this.workerId });
 
-          await this.saveJob(job);
-        });
-      });
+                try {
+                  await this.processor!.process(job);
+                  await job.complete();
+                } catch (e) {
+                  await job.fail(e);
+                } finally {
+                  job.release();
+                }
+
+                await this.saveJob(job);
+                resolve();
+              }),
+            ),
+        ),
+    );
   }
 
   private sqlToJobData<T extends JobData>(result: any): Job<T> {
@@ -235,5 +256,14 @@ export class PostgresqlQueue implements Queue {
     }
 
     return new Date(value);
+  }
+
+  private async heartbeat(client: PoolClient): Promise<any> {
+    return client.query(
+      `UPDATE workers 
+       SET heartbeat = NOW() 
+       WHERE id = $1`,
+      [this.workerId],
+    );
   }
 }

@@ -1,4 +1,4 @@
-import { SpyProcessor } from '@racyn/kujob-testutils';
+import { SpyProcessor, waitFor } from '@racyn/kujob-testutils';
 import {
   afterAll,
   afterEach,
@@ -18,11 +18,13 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
   test('jobs run from oldest to newest', async () => {
     const queue = await tester.getKujob().createQueue({ name: 'myqueue' });
-    await queue.addJobs([
-      queue.createJob({ position: 1 }),
-      queue.createJob({ position: 2 }),
-      queue.createJob({ position: 3 }),
-    ]);
+
+    await queue.addJob(queue.createJob({ position: 1 }));
+    await waitFor(1);
+    await queue.addJob(queue.createJob({ position: 2 }));
+    await waitFor(1);
+    await queue.addJob(queue.createJob({ position: 3 }));
+    await waitFor(1);
 
     const processor = new SpyProcessor<{ position: number }>();
     queue.setProcessor(processor);

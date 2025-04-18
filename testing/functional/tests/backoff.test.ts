@@ -33,10 +33,10 @@ describe.each(getTestedDrivers())('%s', (tester) => {
   test('fixed backoff', async () => {
     const driver = new TestDriver(tester);
     await driver.setup({
-      backoff: new FixedBackoff({ duration: Duration.milliseconds(100) }),
+      backoff: new FixedBackoff({ duration: Duration.milliseconds(250) }),
     });
     await driver.runOneBatch();
-    await driver.expectJobToBeRescheduledAround(100, 25);
+    await driver.expectJobToBeRescheduledAround(250, 50);
   });
 });
 
