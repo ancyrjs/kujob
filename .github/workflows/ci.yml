@@ -31,8 +31,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Test
+      - name: Unit Test
         run: pnpm test
+
+      - name: Functional Tests
+        run: pnpm test:functional
 
       - name: Build
         run: pnpm build
