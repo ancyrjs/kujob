@@ -8,9 +8,11 @@ import {
   expect,
   test,
 } from 'vitest';
-import { getTestedDrivers } from './config/tested-drivers.js';
+import { getTestedDriver } from './config/tested-drivers.js';
 
-describe.each(getTestedDrivers())('%s', (tester) => {
+describe('processing', () => {
+  const tester = getTestedDriver();
+
   beforeAll(() => tester.beforeAll());
   beforeEach(() => tester.beforeEach());
   afterAll(() => tester.afterAll());

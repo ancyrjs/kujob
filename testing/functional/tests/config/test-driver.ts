@@ -1,7 +1,7 @@
 import { Kujob, Queue, StepLooper } from '@racyn/kujob-core';
 import { waitEndOfLoop } from '@racyn/kujob-testutils';
 
-export interface Tester {
+export interface TestDriver {
   beforeAll(): Promise<void>;
 
   beforeEach(): Promise<void>;
@@ -17,7 +17,7 @@ export interface Tester {
   name(): string;
 }
 
-export abstract class BaseTester implements Tester {
+export abstract class BaseTestDriver implements TestDriver {
   async beforeAll(): Promise<void> {}
 
   async beforeEach(): Promise<void> {}

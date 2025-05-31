@@ -14,11 +14,12 @@ import {
   expect,
   test,
 } from 'vitest';
-import { getTestedDrivers } from './config/tested-drivers.js';
+import { getTestedDriver } from './config/tested-drivers.js';
+import { TestDriver } from './config/test-driver.js';
 
-import { Tester } from './config/tester.js';
+describe('schedule', () => {
+  const tester = getTestedDriver();
 
-describe.each(getTestedDrivers())('%s', (tester) => {
   beforeAll(() => tester.beforeAll());
   beforeEach(() => tester.beforeEach());
   afterAll(() => tester.afterAll());
@@ -26,7 +27,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
   describe('asap', () => {
     test('job runs as soon as possible by default', async () => {
-      const driver = new TestDriver(tester);
+      const driver = new TestFixture(tester);
       await driver.setup({ schedule: null });
       await driver.waitUntilJobIsProcessed();
       await driver.expectJobToHaveRunWithin(150);
@@ -35,7 +36,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
 
   describe('delay', () => {
     test('job is not run before a delay', async () => {
-      const driver = new TestDriver(tester);
+      const driver = new TestFixture(tester);
       await driver.setup({
         schedule: new DelaySchedule({
           duration: Duration.milliseconds(30),
@@ -46,7 +47,7 @@ describe.each(getTestedDrivers())('%s', (tester) => {
     });
 
     test('repeat after delay', async () => {
-      const driver = new TestDriver(tester);
+      const driver = new TestFixture(tester);
       await driver.setup({
         schedule: new DelaySchedule({
           duration: Duration.milliseconds(15),
@@ -58,12 +59,12 @@ describe.each(getTestedDrivers())('%s', (tester) => {
   });
 });
 
-class TestDriver {
+class TestFixture {
   private jobId: string | null = null;
   private processor: SpyProcessor = new SpyProcessor();
   private queue: Queue | null = null;
 
-  constructor(private readonly tester: Tester) {}
+  constructor(private readonly tester: TestDriver) {}
 
   async setup({ schedule }: { schedule: ScheduleStrategy | null }) {
     this.queue = await this.tester.getKujob().createQueue({ name: 'myqueue' });

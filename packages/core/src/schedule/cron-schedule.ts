@@ -47,8 +47,6 @@ export class CronSchedule implements ScheduleStrategy {
     return this.nextRunAtDate(params);
   }
 
-  scheduledForNextRun(): void {}
-
   /**
    * Calculate the next run date.
    * @param params

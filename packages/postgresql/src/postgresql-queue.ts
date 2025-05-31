@@ -14,9 +14,10 @@ import {
   randomUuid,
   ScheduleCatalog,
 } from '@racyn/kujob-core';
+import { PoolClient } from 'pg';
+
 import { Pool } from './pool.js';
 import { AddJobsCommand } from './add-jobs-command.js';
-import { PoolClient } from 'pg';
 
 export class PostgresqlQueue implements Queue {
   private name: string;
@@ -36,6 +37,7 @@ export class PostgresqlQueue implements Queue {
     this.pool = props.pool;
     this.jobsLooper = props.jobsLooper;
     this.dateProvider = props.dateProvider;
+
     this.jobsLooper.configure(() => this.processJobs());
   }
 
@@ -161,6 +163,7 @@ export class PostgresqlQueue implements Queue {
             new Promise<void>((resolve) =>
               setImmediate(async () => {
                 job.acquire({ workerId: this.workerId });
+                await this.saveJob(job);
 
                 try {
                   await this.processor!.process(job);

@@ -140,15 +140,12 @@ export class Job<T extends JobData> implements AcquiredJob<T> {
   }
 
   private reschedule(): void {
-    const nextRun = this.state.backoff.scheduleFor({
+    this.state.status = 'waiting';
+    this.state.scheduledAt = this.state.backoff.scheduleFor({
       now: this.dateProvider.getDate(),
       attemptsDone: this.state.attemptsDone,
       attemptsMax: this.state.attemptsMax,
     });
-
-    this.state.status = 'waiting';
-    this.state.scheduledAt = nextRun;
-    return;
   }
 
   private definitelyFail(reason: any) {

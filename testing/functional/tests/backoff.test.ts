@@ -14,24 +14,26 @@ import {
   expect,
   test,
 } from 'vitest';
-import { getTestedDrivers } from './config/tested-drivers.js';
-import { Tester } from './config/tester.js';
+import { getTestedDriver } from './config/tested-drivers.js';
+import { TestDriver } from './config/test-driver.js';
 
-describe.each(getTestedDrivers())('%s', (tester) => {
+describe('backoff', () => {
+  const tester = getTestedDriver();
+
   beforeAll(() => tester.beforeAll());
   beforeEach(() => tester.beforeEach());
   afterAll(() => tester.afterAll());
   afterEach(() => tester.afterEach());
 
   test('default to immediate re-schedule', async () => {
-    const driver = new TestDriver(tester);
+    const driver = new TestFixture(tester);
     await driver.setup({ backoff: null });
     await driver.runOneBatch();
     await driver.expectJobToBeRescheduledWithin(3);
   });
 
   test('fixed backoff', async () => {
-    const driver = new TestDriver(tester);
+    const driver = new TestFixture(tester);
     await driver.setup({
       backoff: new FixedBackoff({ duration: Duration.milliseconds(250) }),
     });
@@ -40,12 +42,12 @@ describe.each(getTestedDrivers())('%s', (tester) => {
   });
 });
 
-class TestDriver {
+class TestFixture {
   private jobId: string | null = null;
   private processor: FailingProcessor = new FailingProcessor();
   private queue: Queue | null = null;
 
-  constructor(private readonly tester: Tester) {}
+  constructor(private readonly tester: TestDriver) {}
 
   async setup({ backoff }: { backoff: BackoffStrategy | null }) {
     this.queue = await this.tester.getKujob().createQueue({ name: 'myqueue' });

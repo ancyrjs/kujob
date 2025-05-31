@@ -24,10 +24,4 @@ export interface ScheduleStrategy {
    * @param params
    */
   nextRunAt(params: RunAtParams): Date | null;
-
-  /**
-   * Notify the schedule that the job has been scheduled
-   * Useful for limiting the number of runs
-   */
-  scheduledForNextRun(): void;
 }

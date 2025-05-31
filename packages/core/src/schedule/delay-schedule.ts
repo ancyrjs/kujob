@@ -51,6 +51,4 @@ export class DelaySchedule implements ScheduleStrategy {
 
     return this.duration.addToDate(params.now);
   }
-
-  scheduledForNextRun(): void {}
 }

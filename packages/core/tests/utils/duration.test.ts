@@ -1,4 +1,5 @@
-import { Duration } from './duration.js';
+import { expect, test } from 'vitest';
+import { Duration } from '../../src/utils/duration.js';
 
 test('defaults to milliseconds', () => {
   expect(new Duration(60).toMilliseconds()).toBe(60);

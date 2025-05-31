@@ -9,8 +9,7 @@ export default defineConfig({
   ],
   test: {
     globals: true,
-    include: ['src/**/*.test.ts', 'tests/suites/functional/**/*.test.ts'],
-    hookTimeout: 30_000,
+    include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
     coverage: {
       provider: 'v8',
     },

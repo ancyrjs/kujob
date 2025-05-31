@@ -4,9 +4,9 @@ import {
   StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
 import { DefaultPoolFactory, PostgresqlDriver } from '@racyn/kujob-postgresql';
-import { BaseTester } from './tester.js';
+import { BaseTestDriver } from './test-driver.js';
 
-export class PostgresqlTester extends BaseTester {
+export class PostgresqlTestDriver extends BaseTestDriver {
   // @ts-ignore
   private kujob: Kujob;
 
@@ -26,6 +26,7 @@ export class PostgresqlTester extends BaseTester {
         database: this.container.getDatabase(),
       }),
     });
+
     await this.driver.scaffold();
 
     this.kujob = new Kujob({

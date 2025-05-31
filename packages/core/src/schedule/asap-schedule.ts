@@ -31,6 +31,4 @@ export class AsapSchedule implements ScheduleStrategy {
   nextRunAt(params: RunAtParams): Date | null {
     return null;
   }
-
-  scheduledForNextRun() {}
 }
