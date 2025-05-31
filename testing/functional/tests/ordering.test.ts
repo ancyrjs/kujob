@@ -43,6 +43,7 @@ describe('ordering', () => {
 
   test('jobs run in priority order', async () => {
     const queue = await tester.getKujob().createQueue({ name: 'myqueue' });
+
     await queue.addJobs([
       queue.createJob({ position: 1 }).priority(1),
       queue.createJob({ position: 2 }).priority(2),

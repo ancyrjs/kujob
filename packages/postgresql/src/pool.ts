@@ -13,7 +13,6 @@ export class Pool {
    */
   async transaction<T>(callback: (client: PgPoolClient) => Promise<T>) {
     const client = await this.pool.connect();
-
     let result: T;
 
     try {
@@ -32,7 +31,6 @@ export class Pool {
 
   async query<T>(callback: (client: PgPoolClient) => Promise<T>) {
     const client = await this.pool.connect();
-
     let result: T;
 
     try {

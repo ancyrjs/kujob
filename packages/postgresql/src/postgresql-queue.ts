@@ -6,7 +6,6 @@ import {
   Job,
   JobBuilder,
   JobData,
-  JobSpec,
   Looper,
   NonAcquiredJob,
   Processor,
@@ -58,11 +57,12 @@ export class PostgresqlQueue implements Queue {
   }
 
   async addJob(job: JobBuilder): Promise<BuiltJob> {
+    const jobs = [job.build()];
     const result = await new AddJobsCommand({
       pool: this.pool,
       queueName: this.name,
       dateProvider: this.dateProvider,
-    }).execute([job.build()]);
+    }).execute(jobs);
 
     return result[0];
   }
@@ -73,16 +73,6 @@ export class PostgresqlQueue implements Queue {
       queueName: this.name,
       dateProvider: this.dateProvider,
     }).execute(jobs.map((job) => job.build()));
-  }
-
-  async addJobSpec(job: JobSpec): Promise<BuiltJob> {
-    const result = await new AddJobsCommand({
-      pool: this.pool,
-      queueName: this.name,
-      dateProvider: this.dateProvider,
-    }).execute([job]);
-
-    return result[0];
   }
 
   async readJob<T extends JobData>(
@@ -141,6 +131,7 @@ export class PostgresqlQueue implements Queue {
       const jobIds = allJobs.rows.map((row) => row.id);
 
       if (jobIds.length > 0) {
+        // We acquire the jobs in a batch to avoid multiple updates and keep performances high.
         await client.query(
           `UPDATE jobs 
          SET status = 'processing', 
@@ -155,30 +146,32 @@ export class PostgresqlQueue implements Queue {
       return allJobs;
     });
 
+    // Create jobs and acquire them
+    const jobs = result.rows.map((row) => {
+      const job = this.sqlToJobData(row);
+      job.onAcquired({ workerId: this.workerId });
+      return job;
+    });
+
     await Promise.all(
-      result.rows
-        .map((row) => this.sqlToJobData(row))
-        .map(
-          (job) =>
-            new Promise<void>((resolve) =>
-              setImmediate(async () => {
-                job.acquire({ workerId: this.workerId });
-                await this.saveJob(job);
+      jobs.map(
+        (job) =>
+          new Promise<void>((resolve) =>
+            setImmediate(async () => {
+              try {
+                await this.processor!.process(job);
+                await job.complete();
+              } catch (e) {
+                await job.fail(e);
+              } finally {
+                job.release();
+              }
 
-                try {
-                  await this.processor!.process(job);
-                  await job.complete();
-                } catch (e) {
-                  await job.fail(e);
-                } finally {
-                  job.release();
-                }
-
-                await this.saveJob(job);
-                resolve();
-              }),
-            ),
-        ),
+              await this.saveJob(job);
+              resolve();
+            }),
+          ),
+      ),
     );
   }
 

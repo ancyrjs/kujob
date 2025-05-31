@@ -5,7 +5,6 @@ import {
   Job,
   JobBuilder,
   JobData,
-  JobSpec,
   JobState,
   Looper,
   NonAcquiredJob,
@@ -47,33 +46,28 @@ export class InMemoryQueue implements Queue {
   }
 
   async addJob(job: JobBuilder): Promise<BuiltJob> {
-    const result = await this.addJobSpec(job.build());
-    this.sortQueue();
-
-    return result;
+    const result = await this.addJobs([job]);
+    return result[0];
   }
 
   async addJobs(jobs: JobBuilder[]): Promise<BuiltJob[]> {
-    const results = await Promise.all(
-      jobs.map((job) => this.addJobSpec(job.build())),
-    );
+    const results = jobs.map((builder) => {
+      const job = Job.fromSpec({
+        spec: builder.build(),
+        queueId: this.queueId,
+        dateProvider: this.dateProvider,
+      });
+
+      this.queue.push(job.getState());
+
+      return {
+        id: job.getId(),
+      };
+    });
+
     this.sortQueue();
 
     return results;
-  }
-
-  async addJobSpec(spec: JobSpec): Promise<BuiltJob> {
-    const job = Job.fromSpec({
-      spec,
-      queueId: this.queueId,
-      dateProvider: this.dateProvider,
-    });
-
-    this.queue.push(job.getState());
-
-    return {
-      id: job.getId(),
-    };
   }
 
   async readJob<T extends JobData>(
@@ -125,12 +119,12 @@ export class InMemoryQueue implements Queue {
 
     // Process jobs
     for (const state of jobsToProcess) {
-      const acquiredJob = new Job({
+      const job = new Job({
         state,
         dateProvider: this.dateProvider,
       });
 
-      acquiredJob.acquire({
+      job.onAcquired({
         workerId: this.workerId,
       });
 
@@ -140,10 +134,10 @@ export class InMemoryQueue implements Queue {
 
       setImmediate(async () => {
         try {
-          await processor.process(acquiredJob);
-          await acquiredJob.complete();
+          await processor.process(job);
+          await job.complete();
         } catch (e) {
-          await acquiredJob.fail(e);
+          await job.fail(e);
         }
       });
     }

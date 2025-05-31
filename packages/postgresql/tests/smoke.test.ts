@@ -154,7 +154,7 @@ test('processing a job', async () => {
     createdAt: expect.any(Date),
     startedAt: expect.any(Date),
     scheduledAt: expect.any(Date),
-    updatedAt: expect.any(Date),
+    updatedAt: null,
     finishedAt: expect.any(Date),
     failureReason: null,
     status: 'completed',

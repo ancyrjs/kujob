@@ -1,4 +1,3 @@
-import { Pool } from './pool.js';
 import {
   BuiltJob,
   CurrentDateProvider,
@@ -7,12 +6,13 @@ import {
   JobSpec,
   JobState,
 } from '@racyn/kujob-core';
+import { Pool } from './pool.js';
 
 /**
  * Abstract the operation of adding jobs to the queue
  */
 export class AddJobsCommand {
-  static DEFAULT_CHUNK_SIZE = 1000;
+  static DEFAULT_BATCH_SIZE = 1000;
 
   private pool: Pool;
   private queueName: string;
@@ -27,7 +27,7 @@ export class AddJobsCommand {
   }) {
     this.pool = props.pool;
     this.queueName = props.queueName;
-    this.chunkSize = props.chunkSize ?? AddJobsCommand.DEFAULT_CHUNK_SIZE;
+    this.chunkSize = props.chunkSize ?? AddJobsCommand.DEFAULT_BATCH_SIZE;
     this.dateProvider = props.dateProvider ?? CurrentDateProvider.INSTANCE;
   }
 
@@ -36,15 +36,14 @@ export class AddJobsCommand {
       return [];
     }
 
-    const jobs = builders.map((builder) => this.createJob(builder));
-    const chunks = this.chunkJobs(jobs);
-    const queries = chunks.map((chunk) => this.toInsertQuery(chunk));
+    const jobs = builders.map((builder) => this.jobFromSpec(builder));
+    const batches = this.batch(jobs);
+    const queries = batches.map((chunk) => this.toSqlQuery(chunk));
 
     // transactional bulk insert
     await this.pool.transaction(async (client) => {
-      // Note : does it make sense to run it sequentially or can we run them in Promise.all ?
-      for (const { queryText, queryParams } of queries) {
-        await client.query(queryText, queryParams);
+      for (const { query, params } of queries) {
+        await client.query(query, params);
       }
     });
 
@@ -59,7 +58,7 @@ export class AddJobsCommand {
    * @param spec
    * @private
    */
-  private createJob(spec: JobSpec): JobState {
+  private jobFromSpec(spec: JobSpec): JobState {
     return Job.fromSpec({
       spec,
       queueId: this.queueName,
@@ -68,11 +67,12 @@ export class AddJobsCommand {
   }
 
   /**
-   * Split the jobs into chunks
+   * Split the jobs into batches of a fixed size
+   * Because PostgreSQL has a limit on the number of parameters in a query,
    * @param jobs
    * @private
    */
-  private chunkJobs<T>(jobs: T[]) {
+  private batch<T>(jobs: T[]) {
     const out: T[][] = [];
 
     for (let i = 0; i < jobs.length; i += this.chunkSize) {
@@ -88,24 +88,24 @@ export class AddJobsCommand {
    * @param jobs
    * @private
    */
-  private toInsertQuery(jobs: JobState[]) {
-    const valueStrings = [];
-    const queryParams: any[] = [];
-    let paramIndex = 1;
+  private toSqlQuery(jobs: JobState[]) {
+    const bindings = [];
+    const params: any[] = [];
+    let idx = 1;
 
     for (const job of jobs) {
-      valueStrings.push(
+      bindings.push(
         [
           `(`,
-          `$${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, `,
-          `$${paramIndex + 5}, $${paramIndex + 6}, $${paramIndex + 7}, $${paramIndex + 8}, $${paramIndex + 9}, `,
-          `$${paramIndex + 10}, $${paramIndex + 11}, $${paramIndex + 12}, $${paramIndex + 13}, $${paramIndex + 14}, `,
-          `$${paramIndex + 15}`,
+          `$${idx}, $${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, `,
+          `$${idx + 5}, $${idx + 6}, $${idx + 7}, $${idx + 8}, $${idx + 9}, `,
+          `$${idx + 10}, $${idx + 11}, $${idx + 12}, $${idx + 13}, $${idx + 14}, `,
+          `$${idx + 15}`,
           `)`,
         ].join(''),
       );
 
-      queryParams.push(
+      params.push(
         job.id,
         this.queueName,
         null,
@@ -124,13 +124,13 @@ export class AddJobsCommand {
         null,
       );
 
-      paramIndex += 16;
+      idx += 16;
     }
 
-    const queryText = `
-        INSERT INTO jobs VALUES ${valueStrings.join(', ')}
+    const query = `
+        INSERT INTO jobs VALUES ${bindings.join(', ')}
     `;
 
-    return { queryText, queryParams };
+    return { query, params };
   }
 }

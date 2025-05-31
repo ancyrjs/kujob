@@ -48,7 +48,7 @@ export class JobBuilder<T extends JobData = JobData> {
   }
 
   save(): Promise<BuiltJob> {
-    return this.queue.addJobSpec(this.state);
+    return this.queue.addJob(this);
   }
 
   build() {

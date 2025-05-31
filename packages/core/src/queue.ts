@@ -1,4 +1,4 @@
-import { BuiltJob, JobData, JobSpec, NonAcquiredJob } from './job-contract.js';
+import { BuiltJob, JobData, NonAcquiredJob } from './job-contract.js';
 import { Processor } from './processor.js';
 import { JobBuilder } from './job-builder.js';
 import { Looper } from './looper/looper.js';
@@ -9,8 +9,6 @@ export interface Queue {
   addJob(job: JobBuilder): Promise<BuiltJob>;
 
   addJobs(jobs: JobBuilder[]): Promise<BuiltJob[]>;
-
-  addJobSpec(job: JobSpec): Promise<BuiltJob>;
 
   setProcessor(processor: Processor<any>): void;
 

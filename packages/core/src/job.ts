@@ -102,12 +102,6 @@ export class Job<T extends JobData> implements AcquiredJob<T> {
     return this.state;
   }
 
-  acquire({ workerId }: { workerId: string }) {
-    this.state.status = 'processing';
-    this.state.startedAt = this.dateProvider.getDate();
-    this.state.workerId = workerId;
-  }
-
   release() {
     this.state.workerId = null;
   }
@@ -118,8 +112,6 @@ export class Job<T extends JobData> implements AcquiredJob<T> {
     });
 
     if (nextRunAt) {
-      this.state.schedule.scheduledForNextRun();
-
       this.state.status = 'waiting';
       this.state.scheduledAt = nextRunAt;
     } else {
@@ -153,5 +145,15 @@ export class Job<T extends JobData> implements AcquiredJob<T> {
     this.state.finishedAt = this.dateProvider.getDate();
     this.state.failureReason =
       reason instanceof Error ? reason.message : 'unknown';
+  }
+
+  /**
+   * Called when the job is acquired by a worker.
+   * @param workerId
+   */
+  onAcquired({ workerId }: { workerId: string }) {
+    this.state.status = 'processing';
+    this.state.startedAt = this.dateProvider.getDate();
+    this.state.workerId = workerId;
   }
 }
