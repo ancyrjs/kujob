@@ -10,7 +10,7 @@ import {
   Duration,
   JobBuilder,
   LinearBackoff,
-} from '@racyn/kujob-core';
+} from '@kujob/core';
 import { DefaultPoolFactory, PostgresqlDriver } from '../src/index.js';
 
 let container: StartedPostgreSqlContainer;

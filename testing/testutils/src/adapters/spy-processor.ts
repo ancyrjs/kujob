@@ -1,4 +1,4 @@
-import { AcquiredJob, JobData, Processor } from '@racyn/kujob-core';
+import { AcquiredJob, JobData, Processor } from '@kujob/core';
 
 type JobInfo<T extends JobData> = {
   data: T;

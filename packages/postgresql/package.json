@@ -1,5 +1,5 @@
 {
-  "name": "@racyn/kujob-postgresql",
+  "name": "@kujob/postgresql",
   "version": "0.0.1",
   "description": "",
   "keywords": [],
@@ -14,13 +14,13 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@racyn/kujob-core": "workspace:*"
+    "@kujob/core": "workspace:*"
   },
   "peerDependencies": {
     "pg": "^8.0.0"
   },
   "devDependencies": {
-    "@racyn/kujob-testutils": "workspace:*",
+    "@kujob/testutils": "workspace:*",
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.11.9",
     "@testcontainers/postgresql": "^10.18.0",

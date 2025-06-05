@@ -1,5 +1,5 @@
 {
-  "name": "@racyn/kujob-root",
+  "name": "@kujob/root",
   "version": "0.0.1",
   "description": "",
   "keywords": [],
@@ -7,10 +7,10 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "pnpx concurrently \"pnpm --filter=kujob-core dev\" \"pnpm --filter=kujob-in-memory dev\" \"pnpm --filter=kujob-postgresql dev\" \"pnpm --filter=kujob-testutils dev\"",
-    "build": "pnpm --filter=kujob-core build && pnpm --filter=kujob-in-memory build && pnpm --filter=kujob-postgresql build && pnpm --filter=kujob-testutils build",
-    "test": "pnpm --filter=kujob-core test && pnpm --filter=kujob-in-memory test && pnpm --filter=kujob-postgresql test && pnpm --filter=kujob-testutils test",
-    "test:functional": "DRIVER=in-memory pnpm --filter=kujob-testing-functional test && DRIVER=postgresql pnpm --filter=kujob-testing-functional test"
+    "dev": "pnpx concurrently \"pnpm --filter=core dev\" \"pnpm --filter=in-memory dev\" \"pnpm --filter=postgresql dev\" \"pnpm --filter=testutils dev\"",
+    "build": "pnpm --filter=core build && pnpm --filter=in-memory build && pnpm --filter=postgresql build && pnpm --filter=testutils build",
+    "test": "pnpm --filter=core test && pnpm --filter=in-memory test && pnpm --filter=postgresql test && pnpm --filter=testutils test",
+    "test:functional": "DRIVER=in-memory pnpm --filter=testing-functional test && DRIVER=postgresql pnpm --filter=testing-functional test"
   },
   "devDependencies": {
     "prettier": "^3.5.3",

@@ -12,7 +12,7 @@ import {
   Queue,
   randomUuid,
   ScheduleCatalog,
-} from '@racyn/kujob-core';
+} from '@kujob/core';
 import { PoolClient } from 'pg';
 
 import { Pool } from './pool.js';

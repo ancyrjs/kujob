@@ -1,5 +1,5 @@
 {
-  "name": "@racyn/kujob-testing-functional",
+  "name": "@kujob/testing-functional",
   "version": "0.0.1",
   "description": "",
   "keywords": [],
@@ -11,10 +11,10 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@racyn/kujob-core": "workspace:*",
-    "@racyn/kujob-in-memory": "workspace:*",
-    "@racyn/kujob-postgresql": "workspace:*",
-    "@racyn/kujob-testutils": "workspace:*",
+    "@kujob/core": "workspace:*",
+    "@kujob/in-memory": "workspace:*",
+    "@kujob/postgresql": "workspace:*",
+    "@kujob/testutils": "workspace:*",
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.11.9",
     "@testcontainers/postgresql": "^10.18.0",

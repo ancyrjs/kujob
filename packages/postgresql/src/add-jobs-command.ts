@@ -5,7 +5,7 @@ import {
   Job,
   JobSpec,
   JobState,
-} from '@racyn/kujob-core';
+} from '@kujob/core';
 import { Pool } from './pool.js';
 
 /**

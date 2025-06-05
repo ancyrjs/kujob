@@ -6,7 +6,7 @@ import {
   Looper,
   Queue,
   TimeoutLooper,
-} from '@racyn/kujob-core';
+} from '@kujob/core';
 import { InMemoryQueue } from './in-memory-queue.js';
 
 export class InMemoryDriver implements Driver {

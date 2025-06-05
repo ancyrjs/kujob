@@ -1,4 +1,4 @@
-import { SpyProcessor, waitFor } from '@racyn/kujob-testutils';
+import { SpyProcessor, waitFor } from '@kujob/testutils';
 import {
   afterAll,
   afterEach,

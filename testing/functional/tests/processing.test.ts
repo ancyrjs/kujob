@@ -1,4 +1,4 @@
-import { FailingProcessor, SpyProcessor } from '@racyn/kujob-testutils';
+import { FailingProcessor, SpyProcessor } from '@kujob/testutils';
 import {
   afterAll,
   afterEach,

@@ -11,7 +11,7 @@ import {
   Processor,
   Queue,
   randomUuid,
-} from '@racyn/kujob-core';
+} from '@kujob/core';
 
 export class InMemoryQueue implements Queue {
   private name: string;

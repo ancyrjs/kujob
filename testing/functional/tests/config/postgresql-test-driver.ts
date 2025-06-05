@@ -1,9 +1,9 @@
-import { Kujob } from '@racyn/kujob-core';
+import { Kujob } from '@kujob/core';
 import {
   PostgreSqlContainer,
   StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
-import { DefaultPoolFactory, PostgresqlDriver } from '@racyn/kujob-postgresql';
+import { DefaultPoolFactory, PostgresqlDriver } from '@kujob/postgresql';
 import { BaseTestDriver } from './test-driver.js';
 
 export class PostgresqlTestDriver extends BaseTestDriver {

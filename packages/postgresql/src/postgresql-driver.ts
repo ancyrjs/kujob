@@ -6,7 +6,7 @@ import {
   Looper,
   Queue,
   TimeoutLooper,
-} from '@racyn/kujob-core';
+} from '@kujob/core';
 import { Pool as PgPool } from 'pg';
 import { PostgresqlQueue } from './postgresql-queue.js';
 import { DefaultMigrator, Migrator } from './migrator.js';

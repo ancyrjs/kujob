@@ -1,10 +1,5 @@
-import {
-  DelaySchedule,
-  Duration,
-  Queue,
-  ScheduleStrategy,
-} from '@racyn/kujob-core';
-import { SpyProcessor } from '@racyn/kujob-testutils';
+import { DelaySchedule, Duration, Queue, ScheduleStrategy } from '@kujob/core';
+import { SpyProcessor } from '@kujob/testutils';
 import {
   afterAll,
   afterEach,

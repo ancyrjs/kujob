@@ -1,5 +1,5 @@
-import { Kujob } from '@racyn/kujob-core';
-import { InMemoryDriver } from '@racyn/kujob-in-memory';
+import { Kujob } from '@kujob/core';
+import { InMemoryDriver } from '@kujob/in-memory';
 import { BaseTestDriver } from './test-driver.js';
 
 export class InMemoryTestDriver extends BaseTestDriver {

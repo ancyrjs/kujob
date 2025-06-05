@@ -1,10 +1,5 @@
-import {
-  BackoffStrategy,
-  Duration,
-  FixedBackoff,
-  Queue,
-} from '@racyn/kujob-core';
-import { expectDate, FailingProcessor } from '@racyn/kujob-testutils';
+import { BackoffStrategy, Duration, FixedBackoff, Queue } from '@kujob/core';
+import { expectDate, FailingProcessor } from '@kujob/testutils';
 import {
   afterAll,
   afterEach,

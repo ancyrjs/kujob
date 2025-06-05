@@ -1,4 +1,4 @@
-import { AcquiredJob, JobData } from '@racyn/kujob-core';
+import { AcquiredJob, JobData } from '@kujob/core';
 import { SpyProcessor } from './spy-processor.js';
 
 export class FailingProcessor<T extends JobData = any> extends SpyProcessor<T> {

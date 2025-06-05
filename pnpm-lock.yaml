@@ -60,11 +60,11 @@ importers:
 
   packages/in-memory:
     dependencies:
-      '@racyn/kujob-core':
+      '@kujob/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
-      '@racyn/kujob-testutils':
+      '@kujob/testutils':
         specifier: workspace:*
         version: link:../../testing/testutils
       '@swc/cli':
@@ -100,11 +100,11 @@ importers:
 
   packages/postgresql:
     dependencies:
-      '@racyn/kujob-core':
+      '@kujob/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
-      '@racyn/kujob-testutils':
+      '@kujob/testutils':
         specifier: workspace:*
         version: link:../../testing/testutils
       '@swc/cli':
@@ -149,16 +149,16 @@ importers:
 
   testing/functional:
     devDependencies:
-      '@racyn/kujob-core':
+      '@kujob/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@racyn/kujob-in-memory':
+      '@kujob/in-memory':
         specifier: workspace:*
         version: link:../../packages/in-memory
-      '@racyn/kujob-postgresql':
+      '@kujob/postgresql':
         specifier: workspace:*
         version: link:../../packages/postgresql
-      '@racyn/kujob-testutils':
+      '@kujob/testutils':
         specifier: workspace:*
         version: link:../testutils
       '@swc/cli':
@@ -191,7 +191,7 @@ importers:
 
   testing/testutils:
     dependencies:
-      '@racyn/kujob-core':
+      '@kujob/core':
         specifier: workspace:*
         version: link:../../packages/core
     devDependencies:

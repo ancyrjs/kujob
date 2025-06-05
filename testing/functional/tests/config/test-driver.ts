@@ -1,5 +1,5 @@
-import { Kujob, Queue, StepLooper } from '@racyn/kujob-core';
-import { waitEndOfLoop } from '@racyn/kujob-testutils';
+import { Kujob, Queue, StepLooper } from '@kujob/core';
+import { waitEndOfLoop } from '@kujob/testutils';
 
 export interface TestDriver {
   beforeAll(): Promise<void>;
