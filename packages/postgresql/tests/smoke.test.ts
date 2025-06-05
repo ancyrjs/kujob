@@ -17,7 +17,7 @@ let container: StartedPostgreSqlContainer;
 let driver: PostgresqlDriver;
 
 beforeAll(async () => {
-  container = await new PostgreSqlContainer().start();
+  container = await new PostgreSqlContainer('postgres:17').start();
 
   driver = new PostgresqlDriver({
     poolFactory: new DefaultPoolFactory({

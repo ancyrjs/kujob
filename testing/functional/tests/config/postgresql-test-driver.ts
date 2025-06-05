@@ -15,7 +15,7 @@ export class PostgresqlTestDriver extends BaseTestDriver {
   private driver: PostgresqlDriver;
 
   async beforeAll() {
-    this.container = await new PostgreSqlContainer().start();
+    this.container = await new PostgreSqlContainer('postgres:17').start();
 
     this.driver = new PostgresqlDriver({
       poolFactory: new DefaultPoolFactory({

@@ -12,7 +12,7 @@ let pool: PgPool;
 let migrator: DefaultMigrator;
 
 beforeAll(async () => {
-  container = await new PostgreSqlContainer().start();
+  container = await new PostgreSqlContainer('postgres:17').start();
 
   const poolFactory = new DefaultPoolFactory({
     user: container.getUsername(),
